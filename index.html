@@ -103,13 +103,15 @@
   /* Board panel */
   .board-panel { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
   #board-container { width: 400px; height: 400px; position: relative; }
-  .board-grid { display: grid; grid-template-columns: repeat(8, 1fr); width: 400px; height: 400px; border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
-  .sq { display: flex; align-items: center; justify-content: center; font-size: 36px; cursor: pointer; position: relative; transition: background .1s; }
+  .board-grid { display: grid; grid-template-columns: repeat(8, 50px); grid-template-rows: repeat(8, 50px); width: 400px; height: 400px; border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .sq { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 38px; cursor: pointer; position: relative; transition: background .1s; }
   .sq.light { background: #f0d9b5; }
   .sq.dark { background: #b58863; }
-  .sq.highlight { background: #f6f669 !important; opacity: .7; }
-  .sq.best-move { background: #15781b88 !important; }
+  .sq.highlight { background: #f6f669 !important; opacity: .8; }
+  .sq.best-move { background: #15781b99 !important; }
   .piece { user-select: none; line-height: 1; }
+  .piece-w { color: #fff; text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; }
+  .piece-b { color: #1a1a1a; text-shadow: 0 0 2px #88888866; }
   .board-controls { display: flex; gap: 8px; margin-top: 8px; }
   .board-info { background: var(--surface2); border-radius: 6px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
 
@@ -294,9 +296,15 @@ const state = {
 };
 
 // ─── Stockfish WASM ──────────────────────────────────────────────────────────
-function initStockfish() {
+async function initStockfish() {
+  // Fetch as blob to avoid CORS blocking Worker instantiation
+  const res = await fetch('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');
+  if (!res.ok) throw new Error('Stockfish fetch failed');
+  const blob = new Blob([await res.text()], { type: 'application/javascript' });
+  const blobUrl = URL.createObjectURL(blob);
+
   return new Promise(resolve => {
-    const sf = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+    const sf = new Worker(blobUrl);
     let ready = false;
     sf.onmessage = e => {
       if (!ready && (e.data === 'readyok' || e.data === 'uciok')) {
@@ -304,6 +312,7 @@ function initStockfish() {
         if (e.data === 'readyok') { ready = true; state.sfReady = true; resolve(sf); }
       }
     };
+    sf.onerror = err => { throw new Error('Stockfish worker error: ' + err.message); };
     sf.postMessage('uci');
     state.stockfish = sf;
   });
@@ -393,21 +402,183 @@ function extractMoves(pgn) {
   return tokens;
 }
 
+// Opening book: move sequence -> name (longest match wins)
+const OPENING_BOOK = {
+  // e4 openings
+  'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O': 'Ruy Lopez: Closed',
+  'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6': 'Ruy Lopez: Morphy Defence',
+  'e4 e5 Nf3 Nc6 Bb5 a6': 'Ruy Lopez: Morphy Defence',
+  'e4 e5 Nf3 Nc6 Bb5 Nf6': 'Ruy Lopez: Berlin Defence',
+  'e4 e5 Nf3 Nc6 Bb5 f5': 'Ruy Lopez: Schliemann',
+  'e4 e5 Nf3 Nc6 Bb5': 'Ruy Lopez',
+  'e4 e5 Nf3 Nc6 Bc4 Bc5 c3': 'Giuoco Piano: Giuoco Pianissimo',
+  'e4 e5 Nf3 Nc6 Bc4 Bc5': 'Giuoco Piano',
+  'e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5': 'Two Knights: Fried Liver Attack',
+  'e4 e5 Nf3 Nc6 Bc4 Nf6': 'Two Knights Defence',
+  'e4 e5 Nf3 Nc6 Bc4': 'Italian Game',
+  'e4 e5 Nf3 Nc6 d4 exd4 Nxd4': 'Scotch Game',
+  'e4 e5 Nf3 Nc6 d4': 'Scotch Game',
+  'e4 e5 Nf3 Nc6 Nc3 Nf6 Bb5': 'Four Knights: Spanish',
+  'e4 e5 Nf3 Nc6 Nc3 Nf6': 'Four Knights Game',
+  'e4 e5 Nf3 Nc6 Nc3': 'Three Knights Game',
+  'e4 e5 Nf3 Nf6 Nxe5': 'Petrov: Classical',
+  'e4 e5 Nf3 Nf6': 'Petrov Defence',
+  'e4 e5 Nf3 d6': 'Philidor Defence',
+  'e4 e5 Nf3 f5': 'Latvian Gambit',
+  'e4 e5 Nc3 Nf6': 'Vienna: Frankenstein-Dracula',
+  'e4 e5 Nc3 Bc5': 'Vienna: Mieses',
+  'e4 e5 Nc3': 'Vienna Game',
+  'e4 e5 f4 exf4 Nf3': "King's Gambit Accepted: King's Knight",
+  'e4 e5 f4 exf4': "King's Gambit Accepted",
+  'e4 e5 f4 Bc5': "King's Gambit Declined",
+  'e4 e5 f4': "King's Gambit",
+  'e4 e5 d4 exd4': 'Centre Game',
+  'e4 e5': 'Open Game',
+  // Sicilian
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6': 'Sicilian: Najdorf',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6': 'Sicilian: Dragon',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6': 'Sicilian: Scheveningen',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3': 'Sicilian: Open (d6)',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4': 'Sicilian: Open (d6)',
+  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 d6': 'Sicilian: Classical',
+  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 g6': 'Sicilian: Accelerated Dragon',
+  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4': 'Sicilian: Open (Nc6)',
+  'e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6': 'Sicilian: Taimanov',
+  'e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6': 'Sicilian: Kan',
+  'e4 c5 Nf3 e6 d4': 'Sicilian: Open (e6)',
+  'e4 c5 c3 d5': 'Sicilian: Alapin, ...d5',
+  'e4 c5 c3': 'Sicilian: Alapin',
+  'e4 c5 Nc3': 'Sicilian: Closed',
+  'e4 c5 d4': 'Sicilian: Morra Gambit',
+  'e4 c5 Nf3': 'Sicilian Defence',
+  'e4 c5': 'Sicilian Defence',
+  // French
+  'e4 e6 d4 d5 e5 c5': 'French: Advance, ...c5',
+  'e4 e6 d4 d5 e5': 'French: Advance',
+  'e4 e6 d4 d5 exd5': 'French: Exchange',
+  'e4 e6 d4 d5 Nc3 Bb4': 'French: Winawer',
+  'e4 e6 d4 d5 Nc3 Nf6': 'French: Classical',
+  'e4 e6 d4 d5 Nc3': 'French: Classical',
+  'e4 e6 d4 d5 Nd2': 'French: Tarrasch',
+  'e4 e6 d4 d5': 'French Defence',
+  'e4 e6': 'French Defence',
+  // Caro-Kann
+  'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5': 'Caro-Kann: Classical',
+  'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7': 'Caro-Kann: Karpov',
+  'e4 c6 d4 d5 e5': 'Caro-Kann: Advance',
+  'e4 c6 d4 d5 exd5': 'Caro-Kann: Exchange',
+  'e4 c6 d4 d5 Nc3': 'Caro-Kann: Classical',
+  'e4 c6 d4 d5': 'Caro-Kann Defence',
+  'e4 c6': 'Caro-Kann Defence',
+  // Other e4
+  'e4 d5 exd5 Qxd5 Nc3 Qa5': 'Scandinavian: Classical',
+  'e4 d5 exd5 Nf6': 'Scandinavian: Modern',
+  'e4 d5 exd5': 'Scandinavian Defence',
+  'e4 d6 d4 Nf6 Nc3 g6': 'Pirc Defence',
+  'e4 d6 d4 Nf6': 'Pirc Defence',
+  'e4 g6 d4 Bg7': 'Modern Defence',
+  'e4 Nf6 e5 Nd5': "Alekhine's Defence: Modern",
+  'e4 Nf6': "Alekhine's Defence",
+  'e4 d6': 'Pirc/Wade Defence',
+  // d4 openings
+  "d4 d5 c4 e6 Nc3 Nf6 Bg5": "Queen's Gambit Declined: Orthodox",
+  "d4 d5 c4 e6 Nf3 Nf6 Nc3 Be7": "Queen's Gambit Declined: Orthodox",
+  "d4 d5 c4 e6 Nc3 Nf6": "Queen's Gambit Declined",
+  "d4 d5 c4 e6": "Queen's Gambit Declined",
+  "d4 d5 c4 dxc4 Nf3 Nf6": "Queen's Gambit Accepted: Classical",
+  "d4 d5 c4 dxc4": "Queen's Gambit Accepted",
+  "d4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4": 'Slav: Czech',
+  "d4 d5 c4 c6 Nf3 Nf6 Nc3": 'Slav Defence',
+  "d4 d5 c4 c6 Nf3 Nf6": 'Slav Defence',
+  "d4 d5 c4 c6": 'Slav Defence',
+  "d4 d5 c4 Nf6": "Marshall Defence",
+  "d4 d5 c4": "Queen's Gambit",
+  "d4 d5 Nf3 Nf6 c4": "Queen's Gambit (transposition)",
+  "d4 d5 Nf3": "Queen's Pawn: London/Torre",
+  "d4 d5 Bf4": 'London System',
+  "d4 d5": "Queen's Pawn Game",
+  // Indian defences
+  "d4 Nf6 c4 e6 Nc3 Bb4 e3": 'Nimzo-Indian: Rubinstein',
+  "d4 Nf6 c4 e6 Nc3 Bb4 Qc2": 'Nimzo-Indian: Classical',
+  "d4 Nf6 c4 e6 Nc3 Bb4": 'Nimzo-Indian Defence',
+  "d4 Nf6 c4 e6 Nf3 b6 g3 Bb7": "Queen's Indian: Fianchetto",
+  "d4 Nf6 c4 e6 Nf3 b6": "Queen's Indian Defence",
+  "d4 Nf6 c4 e6 g3": 'Catalan Opening',
+  "d4 Nf6 c4 e6": "Nimzo/Queen's Indian (pre)",
+  "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O": "King's Indian: Main Line",
+  "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3": "King's Indian: Samisch",
+  "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6": "King's Indian Defence",
+  "d4 Nf6 c4 g6 Nc3 Bg7": "King's Indian Defence",
+  "d4 Nf6 c4 g6 Nc3": "King's Indian Defence",
+  "d4 Nf6 c4 g6": "King's Indian Defence",
+  "d4 Nf6 c4 c5 d5 e6": 'Benoni: Modern',
+  "d4 Nf6 c4 c5 d5": 'Benoni Defence',
+  "d4 Nf6 c4 c5": 'Benoni Defence',
+  "d4 Nf6 Nf3 g6 c4": "King's Indian (transposition)",
+  "d4 Nf6 Nf3 d5 c4": "Queen's Gambit (transposition)",
+  "d4 Nf6 Bf4": 'London System',
+  "d4 Nf6 Nf3": 'Indian Game',
+  "d4 Nf6 c4": 'Indian Defence',
+  "d4 Nf6": 'Indian Defence',
+  "d4 f5 c4 Nf6 Nc3 e6": 'Dutch: Classical',
+  "d4 f5 c4 Nf6 g3": 'Dutch: Leningrad',
+  "d4 f5 c4 e6": 'Dutch: Stonewall (pre)',
+  "d4 f5": 'Dutch Defence',
+  "d4 e6 c4 f5": 'Dutch: Classical',
+  "d4 e6 Nf3 Nf6 c4": 'English/QID transposition',
+  // English & flank
+  "c4 e5 Nc3 Nf6 Nf3 Nc6 g3": 'English: Four Knights',
+  "c4 e5 Nc3 Nf6": 'English: Reversed Sicilian',
+  "c4 e5 Nc3": 'English: Reversed Sicilian',
+  "c4 e5 g3": 'English: King\'s English',
+  "c4 e5": 'English: King\'s English',
+  "c4 c5 Nf3 Nf6 Nc3": 'English: Symmetrical',
+  "c4 c5": 'English: Symmetrical',
+  "c4 Nf6 Nc3 d5": 'English: Agincourt',
+  "c4 Nf6": 'English: Anglo-Indian',
+  "c4 e6": 'English: Agincourt',
+  "c4": 'English Opening',
+  "Nf3 d5 c4 e6": "Réti: Queen's Gambit Invitation",
+  "Nf3 d5 c4 c6": 'Réti: Slav',
+  "Nf3 d5 c4": "Réti Opening",
+  "Nf3 Nf6 c4": 'Réti Opening',
+  "Nf3 d5 g3": 'Réti Opening',
+  "Nf3 d5": 'Réti Opening',
+  "Nf3": 'Réti/Zukertort Opening',
+  "g3 d5": "King's Fianchetto",
+  "g3": "King's Fianchetto Opening",
+  "b3 e5": 'Nimzowitsch-Larsen: Classical',
+  "b3": 'Nimzowitsch-Larsen Attack',
+  "b4 e5": 'Polish: Classical',
+  "b4": 'Polish Opening',
+  "f4": "Bird's Opening",
+  "d4": "Queen's Pawn Game",
+  "e4": "King's Pawn Game",
+};
+
 function getOpeningKey(pgn, maxMoves = 5) {
   const moves = extractMoves(pgn);
   return moves.slice(0, maxMoves * 2).join(' ') || 'Unknown';
 }
 
 function getOpeningName(pgn) {
-  // Extract ECO/opening name from PGN headers
-  const ecoMatch = pgn.match(/\[ECO "([^"]+)"\]/);
+  // First try PGN headers (chess.com includes these)
   const openingMatch = pgn.match(/\[Opening "([^"]+)"\]/);
   const variationMatch = pgn.match(/\[Variation "([^"]+)"\]/);
   if (openingMatch) {
     return openingMatch[1] + (variationMatch ? ': ' + variationMatch[1] : '');
   }
+
+  // Fall back to move-sequence lookup (longest match wins)
+  const moves = extractMoves(pgn);
+  for (let len = 10; len >= 1; len--) {
+    const key = moves.slice(0, len).join(' ');
+    if (OPENING_BOOK[key]) return OPENING_BOOK[key];
+  }
+
+  const ecoMatch = pgn.match(/\[ECO "([^"]+)"\]/);
   if (ecoMatch) return 'ECO ' + ecoMatch[1];
-  return getOpeningKey(pgn, 3);
+  return moves.slice(0, 4).join(' ') || 'Unknown';
 }
 
 function parseGameMoves(pgn) {
@@ -875,7 +1046,8 @@ function renderBoard(fen, highlightSq = null, bestMove = null) {
       const isHighlight = highlightSq && (sq === highlightSq.slice(0, 2) || sq === highlightSq.slice(2, 4));
       const isBest = bestMove && (sq === bestMove.slice(0, 2) || sq === bestMove.slice(2, 4));
       const cls = `sq ${isLight ? 'light' : 'dark'}${isHighlight ? ' highlight' : ''}${isBest ? ' best-move' : ''}`;
-      html += `<div class="${cls}" data-sq="${sq}">${piece ? `<span class="piece">${PIECES[piece] || piece}</span>` : ''}</div>`;
+      const pieceClass = piece ? (piece === piece.toUpperCase() ? 'piece piece-w' : 'piece piece-b') : '';
+      html += `<div class="${cls}" data-sq="${sq}">${piece ? `<span class="${pieceClass}">${PIECES[piece] || piece}</span>` : ''}</div>`;
     }
   }
   container.innerHTML = html;
