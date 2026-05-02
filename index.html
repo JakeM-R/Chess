@@ -12,82 +12,89 @@
     --surface2: #252836;
     --border: #2e3248;
     --accent: #7c6af7;
-    --accent2: #5eead4;
     --text: #e2e8f0;
     --text-muted: #6b7280;
     --green: #22c55e;
     --red: #ef4444;
     --yellow: #f59e0b;
     --blue: #3b82f6;
+    --sq-light: #f0d9b5;
+    --sq-dark: #b58863;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
-
   #app { display: flex; flex-direction: column; min-height: 100vh; }
 
-  /* Header */
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
-  header h1 { font-size: 20px; font-weight: 700; color: var(--accent); }
+  /* ── Header ── */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--accent); white-space: nowrap; }
   header h1 span { color: var(--text-muted); font-weight: 400; font-size: 14px; margin-left: 8px; }
-  .header-controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }
-  .header-controls input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 13px; width: 160px; }
-  .header-controls select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; }
-  .header-controls input[type="date"] { width: 140px; }
-  .btn { background: var(--accent); color: #fff; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; }
+  .header-controls { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+  .header-controls input, .header-controls select {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 10px; border-radius: 6px; font-size: 13px;
+  }
+  .header-controls input[type="text"] { width: 140px; }
+  .header-controls input[type="date"] { width: 136px; }
+  .btn { background: var(--accent); color: #fff; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; white-space: nowrap; }
   .btn:hover { opacity: .85; }
   .btn:disabled { opacity: .4; cursor: not-allowed; }
   .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); opacity: 1; }
+  .btn-icon { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 16px; transition: color .15s; }
+  .btn-icon:hover { color: var(--text); }
 
-  /* Tabs */
+  /* ── Nav ── */
   nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; }
   nav button { background: none; border: none; color: var(--text-muted); padding: 12px 16px; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all .15s; }
   nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
   nav button:hover:not(.active) { color: var(--text); }
 
-  /* Main */
+  /* ── Main / Panels ── */
   main { flex: 1; padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
-  /* Cards */
+  /* ── Cards ── */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
   .card-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
 
-  /* Grid layouts */
+  /* ── Grids ── */
   .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
-  /* Stat cards */
+  /* ── Stat cards ── */
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
   .stat-card .value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
   .stat-card .label { font-size: 12px; color: var(--text-muted); }
   .stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-  /* Progress bar */
+  /* ── Progress bar ── */
   #analysis-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: none; }
   #analysis-bar.visible { display: block; }
   .progress-track { background: var(--surface2); border-radius: 999px; height: 8px; overflow: hidden; margin-top: 8px; }
   .progress-fill { background: var(--accent); height: 100%; border-radius: 999px; transition: width .3s; width: 0%; }
   .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
-  /* Rating chart */
+  /* ── Charts ── */
   #rating-chart { width: 100%; height: 220px; }
 
-  /* Tables */
+  /* ── Tables ── */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 8px 12px; color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
   td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--surface2); }
 
-  /* Win rate bar */
+  /* ── W/D/L bar ── */
   .wl-bar { display: flex; height: 6px; border-radius: 999px; overflow: hidden; min-width: 80px; }
   .wl-bar .w { background: var(--green); }
   .wl-bar .d { background: var(--yellow); }
   .wl-bar .l { background: var(--red); }
 
-  /* Color badge */
+  /* ── Badges ── */
   .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
   .badge-w { background: #ffffff22; color: #fff; }
   .badge-b { background: #00000044; color: var(--text-muted); border: 1px solid var(--border); }
@@ -95,28 +102,27 @@
   .badge-loss { background: #ef444422; color: var(--red); }
   .badge-draw { background: #f59e0b22; color: var(--yellow); }
 
-  /* Blunder colours */
+  /* ── Annotation colours ── */
   .blunder { color: var(--red); font-weight: 700; }
   .mistake { color: var(--yellow); font-weight: 600; }
-  .inaccuracy { color: #94a3b8; }
 
-  /* Board panel */
-  .board-panel { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
-  #board-container { width: 400px; height: 400px; position: relative; }
+  /* ── Board ── */
+  .board-panel { display: grid; grid-template-columns: 420px 1fr; gap: 20px; }
+  .board-wrap { display: flex; flex-direction: column; gap: 8px; }
   .board-grid { display: grid; grid-template-columns: repeat(8, 50px); grid-template-rows: repeat(8, 50px); width: 400px; height: 400px; border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
-  .sq { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 38px; cursor: pointer; position: relative; transition: background .1s; }
-  .sq.light { background: #f0d9b5; }
-  .sq.dark { background: #b58863; }
-  .sq.highlight { background: #f6f669 !important; opacity: .8; }
+  .sq { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 38px; cursor: pointer; transition: background .1s; }
+  .sq.light { background: var(--sq-light); }
+  .sq.dark { background: var(--sq-dark); }
+  .sq.highlight { background: #f6f66988 !important; }
   .sq.best-move { background: #15781b99 !important; }
   .piece { user-select: none; line-height: 1; }
   .piece-w { color: #fff; text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; }
-  .piece-b { color: #1a1a1a; text-shadow: 0 0 2px #88888866; }
-  .board-controls { display: flex; gap: 8px; margin-top: 8px; }
-  .board-info { background: var(--surface2); border-radius: 6px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+  .piece-b { color: #111; text-shadow: 0 0 3px #88888866; }
+  .board-controls { display: flex; gap: 8px; }
+  .board-info { background: var(--surface2); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--text-muted); min-height: 36px; }
 
-  /* Move list */
-  .move-list { max-height: 360px; overflow-y: auto; font-size: 13px; }
+  /* ── Move list ── */
+  .move-list { max-height: 340px; overflow-y: auto; font-size: 13px; }
   .move-row { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 4px; }
   .move-row:hover { background: var(--surface2); }
   .move-num { color: var(--text-muted); min-width: 28px; }
@@ -126,30 +132,54 @@
   .move-token.blunder-move { color: var(--red); }
   .move-token.mistake-move { color: var(--yellow); }
 
-  /* Game list */
-  .game-row { cursor: pointer; }
-
-  /* Loading / empty states */
+  /* ── Empty / spinner ── */
   .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .3; }
-  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Scrollbars */
+  /* ── Phase bar ── */
+  .phase-bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; gap: 2px; margin-top: 8px; }
+  .phase-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; min-width: 24px; }
+
+  /* ── Openings clickable row ── */
+  .opening-row { cursor: pointer; }
+  .opening-row td:first-child { color: var(--accent); }
+  .opening-row:hover td { background: var(--surface2); }
+  .opening-row td:first-child::before { content: '▶ '; font-size: 10px; opacity: .6; }
+
+  /* ── Opening detail view ── */
+  #opening-detail { display: none; }
+  #opening-detail.active { display: block; }
+  .detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .detail-header h2 { font-size: 20px; font-weight: 700; }
+
+  /* ── Settings modal ── */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: #00000088; z-index: 100; align-items: center; justify-content: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; width: 460px; max-width: 95vw; }
+  .modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+  .modal-close { float: right; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1; margin-top: -4px; }
+  .modal-close:hover { color: var(--text); }
+  .setting-group { margin-bottom: 20px; }
+  .setting-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+  .swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch { width: 36px; height: 36px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; transition: border-color .15s; }
+  .swatch.active { border-color: #fff; }
+  .board-swatch { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 12px; border-radius: 8px; border: 2px solid transparent; transition: border-color .15s; }
+  .board-swatch.active { border-color: var(--accent); }
+  .board-swatch:hover { background: var(--surface2); }
+  .board-mini { display: grid; grid-template-columns: repeat(4, 14px); grid-template-rows: repeat(4, 14px); border-radius: 3px; overflow: hidden; }
+  .board-mini-sq { width: 14px; height: 14px; }
+
+  /* ── Scrollbars ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
-
-  /* Phase chart */
-  .phase-bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; gap: 2px; margin-top: 8px; }
-  .phase-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; min-width: 30px; }
-
-  .trend-up { color: var(--green); }
-  .trend-down { color: var(--red); }
 </style>
 </head>
 <body>
 <div id="app">
+
   <header>
     <h1>Chess Analytics <span id="username-display"></span></h1>
     <div class="header-controls">
@@ -160,9 +190,10 @@
         <option value="bullet">Bullet</option>
         <option value="all">All</option>
       </select>
-      <input type="date" id="date-from" title="From date">
-      <input type="date" id="date-to" title="To date">
+      <input type="date" id="date-from">
+      <input type="date" id="date-to">
       <button class="btn" id="load-btn">Load Games</button>
+      <button class="btn-icon" id="settings-btn" title="Settings">⚙</button>
     </div>
   </header>
 
@@ -183,7 +214,7 @@
       <div class="progress-label"><span id="progress-text">Initialising...</span><span id="progress-pct">0%</span></div>
     </div>
 
-    <!-- OVERVIEW TAB -->
+    <!-- OVERVIEW -->
     <div class="tab-panel active" id="tab-overview">
       <div id="overview-empty" class="empty">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -192,46 +223,48 @@
       <div id="overview-content" style="display:none">
         <div class="grid-4" id="stat-cards"></div>
         <div class="grid-2">
-          <div class="card">
-            <div class="card-title">Rating Over Time</div>
-            <svg id="rating-chart"></svg>
-          </div>
-          <div class="card">
-            <div class="card-title">Results Breakdown</div>
-            <canvas id="results-chart" height="200"></canvas>
-          </div>
+          <div class="card"><div class="card-title">Rating Over Time</div><svg id="rating-chart"></svg></div>
+          <div class="card"><div class="card-title">Results Breakdown</div><canvas id="results-chart" height="200"></canvas></div>
         </div>
         <div class="grid-2">
-          <div class="card">
-            <div class="card-title">Blunder Rate Trend</div>
-            <svg id="blunder-trend-chart" width="100%" height="200"></svg>
-          </div>
-          <div class="card">
-            <div class="card-title">Game Phase Loss Distribution</div>
-            <div id="phase-display"></div>
-          </div>
+          <div class="card"><div class="card-title">Blunder Rate Trend</div><svg id="blunder-trend-chart" width="100%" height="200"></svg></div>
+          <div class="card"><div class="card-title">Game Phase Loss Distribution</div><div id="phase-display"></div></div>
         </div>
       </div>
     </div>
 
-    <!-- OPENINGS TAB -->
+    <!-- OPENINGS -->
     <div class="tab-panel" id="tab-openings">
-      <div id="openings-empty" class="empty"><p>Load games to see opening analysis</p></div>
-      <div id="openings-content" style="display:none">
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title">As White — by frequency</div>
-            <div style="overflow-x:auto"><table id="openings-white-table"></table></div>
+      <!-- List view -->
+      <div id="openings-list">
+        <div id="openings-empty" class="empty"><p>Load games to see opening analysis</p></div>
+        <div id="openings-content" style="display:none">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">As White — by frequency</div>
+              <div style="overflow-x:auto"><table id="openings-white-table"></table></div>
+            </div>
+            <div class="card">
+              <div class="card-title">As Black — by frequency</div>
+              <div style="overflow-x:auto"><table id="openings-black-table"></table></div>
+            </div>
           </div>
-          <div class="card">
-            <div class="card-title">As Black — by frequency</div>
-            <div style="overflow-x:auto"><table id="openings-black-table"></table></div>
-          </div>
+        </div>
+      </div>
+      <!-- Detail view -->
+      <div id="opening-detail">
+        <div class="detail-header">
+          <button class="btn btn-ghost btn-sm" onclick="closeOpeningDetail()">← Back to Openings</button>
+          <h2 id="opening-detail-title"></h2>
+          <span id="opening-detail-badge" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+        <div class="card">
+          <table id="opening-detail-table"></table>
         </div>
       </div>
     </div>
 
-    <!-- BLUNDERS TAB -->
+    <!-- BLUNDERS -->
     <div class="tab-panel" id="tab-blunders">
       <div id="blunders-empty" class="empty"><p>Analysis runs after games load. Check back here once the progress bar completes.</p></div>
       <div id="blunders-content" style="display:none">
@@ -249,12 +282,12 @@
       </div>
     </div>
 
-    <!-- GAMES TAB -->
+    <!-- GAMES -->
     <div class="tab-panel" id="tab-games">
       <div id="games-empty" class="empty"><p>Load games to browse them</p></div>
       <div id="games-content" style="display:none">
         <div class="board-panel">
-          <div>
+          <div class="board-wrap">
             <div class="board-grid" id="chess-board"></div>
             <div class="board-controls">
               <button class="btn btn-sm" id="btn-start">⏮</button>
@@ -280,39 +313,133 @@
   </main>
 </div>
 
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settings-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSettings()">✕</button>
+    <h2>Settings</h2>
+
+    <div class="setting-group">
+      <div class="setting-label">Site Accent Colour</div>
+      <div class="swatch-row" id="accent-swatches"></div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">Board Style</div>
+      <div id="board-style-options"></div>
+    </div>
+  </div>
+</div>
+
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
+// ─── Settings ─────────────────────────────────────────────────────────────────
+const ACCENT_THEMES = [
+  { name: 'Purple',  accent: '#7c6af7' },
+  { name: 'Blue',    accent: '#3b82f6' },
+  { name: 'Teal',    accent: '#14b8a6' },
+  { name: 'Emerald', accent: '#10b981' },
+  { name: 'Rose',    accent: '#f43f5e' },
+  { name: 'Amber',   accent: '#f59e0b' },
+];
+
+const BOARD_STYLES = [
+  { name: 'Classic',  light: '#f0d9b5', dark: '#b58863' },
+  { name: 'Marine',   light: '#dee3e6', dark: '#8ca2ad' },
+  { name: 'Forest',   light: '#ffffdd', dark: '#86a666' },
+  { name: 'Walnut',   light: '#f0d9b5', dark: '#7a4a2c' },
+  { name: 'Night',    light: '#9a9a9a', dark: '#555577' },
+];
+
+let settings = { accentIdx: 0, boardIdx: 0 };
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('chess_settings') || '{}');
+    if (s.accentIdx != null) settings.accentIdx = s.accentIdx;
+    if (s.boardIdx  != null) settings.boardIdx  = s.boardIdx;
+  } catch {}
+  applySettings();
+}
+
+function saveSettings() {
+  localStorage.setItem('chess_settings', JSON.stringify(settings));
+  applySettings();
+}
+
+function applySettings() {
+  const a = ACCENT_THEMES[settings.accentIdx];
+  const b = BOARD_STYLES[settings.boardIdx];
+  const root = document.documentElement.style;
+  root.setProperty('--accent', a.accent);
+  root.setProperty('--sq-light', b.light);
+  root.setProperty('--sq-dark',  b.dark);
+  // Re-render board if one is showing
+  if (state.currentMoves?.length) {
+    renderBoard(state.currentMoves[state.currentMoveIndex].fen, null,
+      state.currentGame ? state.analysisResults[state.currentGame.uuid]?.blunderMoves?.find(m => m.moveIndex === state.currentMoveIndex - 1)?.bestMove : null);
+  }
+}
+
+function buildSettingsUI() {
+  // Accent swatches
+  const sr = document.getElementById('accent-swatches');
+  sr.innerHTML = ACCENT_THEMES.map((t, i) => `
+    <div class="swatch${i === settings.accentIdx ? ' active' : ''}" title="${t.name}"
+      style="background:${t.accent}" onclick="pickAccent(${i})"></div>`).join('');
+
+  // Board style options
+  const br = document.getElementById('board-style-options');
+  br.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+    BOARD_STYLES.map((b, i) => `
+      <div class="board-swatch${i === settings.boardIdx ? ' active' : ''}" onclick="pickBoard(${i})">
+        <div class="board-mini">${[0,1,2,3].flatMap(r => [0,1,2,3].map(c =>
+          `<div class="board-mini-sq" style="background:${(r+c)%2===0 ? b.light : b.dark}"></div>`
+        )).join('')}</div>
+        <span style="font-size:12px">${b.name}</span>
+      </div>`).join('') + '</div>';
+}
+
+function pickAccent(i) {
+  settings.accentIdx = i;
+  saveSettings();
+  buildSettingsUI();
+}
+
+function pickBoard(i) {
+  settings.boardIdx = i;
+  saveSettings();
+  buildSettingsUI();
+}
+
+function openSettings()  { buildSettingsUI(); document.getElementById('settings-modal').classList.add('open'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+
+document.getElementById('settings-btn').onclick = openSettings;
+document.getElementById('settings-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
+
+// ─── State ────────────────────────────────────────────────────────────────────
 const state = {
-  games: [],
-  analysisResults: {}, // uuid -> {blunders, mistakes, phaseLoss}
-  analysisQueue: [],
-  analysing: false,
-  stockfish: null,
-  sfReady: false,
-  currentGame: null,
-  currentMoveIndex: 0,
-  currentMoves: [],
-  currentChess: null,
+  games: [], username: '',
+  analysisResults: {},
+  analysing: false, stockfish: null, sfReady: false,
+  currentGame: null, currentMoveIndex: 0, currentMoves: [], boardFlipped: false,
 };
 
-// ─── Stockfish WASM ──────────────────────────────────────────────────────────
+// ─── Stockfish ────────────────────────────────────────────────────────────────
 async function initStockfish() {
-  // Fetch as blob to avoid CORS blocking Worker instantiation
   const res = await fetch('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');
   if (!res.ok) throw new Error('Stockfish fetch failed');
   const blob = new Blob([await res.text()], { type: 'application/javascript' });
-  const blobUrl = URL.createObjectURL(blob);
-
   return new Promise(resolve => {
-    const sf = new Worker(blobUrl);
+    const sf = new Worker(URL.createObjectURL(blob));
     let ready = false;
     sf.onmessage = e => {
-      if (!ready && (e.data === 'readyok' || e.data === 'uciok')) {
+      if (!ready) {
         if (e.data === 'uciok') sf.postMessage('isready');
         if (e.data === 'readyok') { ready = true; state.sfReady = true; resolve(sf); }
       }
     };
-    sf.onerror = err => { throw new Error('Stockfish worker error: ' + err.message); };
+    sf.onerror = err => { throw new Error(err.message); };
     sf.postMessage('uci');
     state.stockfish = sf;
   });
@@ -324,19 +451,14 @@ function evaluatePosition(fen, depth = 14) {
     const sf = state.stockfish;
     let bestScore = null;
     const handler = e => {
-      const d = e.data;
-      if (typeof d !== 'string') return;
-      const infoMatch = d.match(/info depth (\d+).*score (cp|mate) (-?\d+)/);
-      if (infoMatch) {
-        const dep = parseInt(infoMatch[1]);
-        const type = infoMatch[2];
-        const val = parseInt(infoMatch[3]);
-        if (dep === depth) bestScore = type === 'mate' ? (val > 0 ? 100000 : -100000) : val;
-      }
-      if (d.startsWith('bestmove')) {
+      if (typeof e.data !== 'string') return;
+      const m = e.data.match(/info depth (\d+).*score (cp|mate) (-?\d+)/);
+      if (m && parseInt(m[1]) === depth)
+        bestScore = m[2] === 'mate' ? (parseInt(m[3]) > 0 ? 100000 : -100000) : parseInt(m[3]);
+      if (e.data.startsWith('bestmove')) {
         sf.removeEventListener('message', handler);
-        const bmMatch = d.match(/bestmove (\S+)/);
-        resolve({ score: bestScore, bestMove: bmMatch ? bmMatch[1] : null });
+        const bm = e.data.match(/bestmove (\S+)/);
+        resolve({ score: bestScore, bestMove: bm ? bm[1] : null });
       }
     };
     sf.addEventListener('message', handler);
@@ -345,596 +467,433 @@ function evaluatePosition(fen, depth = 14) {
   });
 }
 
-// ─── Chess.com API ───────────────────────────────────────────────────────────
+// ─── Chess.com API ────────────────────────────────────────────────────────────
 function isCurrentMonth(url) {
-  const parts = url.split('/');
-  const y = parseInt(parts[parts.length - 2]);
-  const m = parseInt(parts[parts.length - 1]);
+  const p = url.split('/');
   const now = new Date();
-  return y === now.getFullYear() && m === (now.getMonth() + 1);
+  return parseInt(p[p.length-2]) === now.getFullYear() && parseInt(p[p.length-1]) === now.getMonth()+1;
 }
 
 async function fetchArchive(url) {
-  // Never cache the current month — new games are still being added
-  const cacheKey = `chess_archive_${url}`;
+  const key = `chess_archive_${url}`;
   if (!isCurrentMonth(url)) {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      try { return JSON.parse(cached); } catch {}
-    }
+    try { const c = localStorage.getItem(key); if (c) return JSON.parse(c); } catch {}
   }
   const res = await fetch(url);
   if (!res.ok) return [];
   const { games } = await res.json();
-  if (!isCurrentMonth(url)) {
-    try { localStorage.setItem(cacheKey, JSON.stringify(games)); } catch {}
-  }
+  if (!isCurrentMonth(url)) { try { localStorage.setItem(key, JSON.stringify(games)); } catch {} }
   return games;
 }
 
-async function fetchAllGames(username, timeControl, dateFrom, dateTo) {
-  const archivesRes = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
-  if (!archivesRes.ok) throw new Error('Player not found');
-  const { archives } = await archivesRes.json();
+async function fetchAllGames(username, tc, dateFrom, dateTo) {
+  const res = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+  if (!res.ok) throw new Error('Player not found');
+  const { archives } = await res.json();
 
-  let from = dateFrom ? new Date(dateFrom) : null;
-  let to = dateTo ? new Date(dateTo) : null;
+  const from = dateFrom ? new Date(dateFrom) : null;
+  const to   = dateTo   ? new Date(dateTo)   : null;
 
-  // Filter archives to relevant months
   const filtered = archives.filter(url => {
-    const parts = url.split('/');
-    const y = parseInt(parts[parts.length - 2]);
-    const m = parseInt(parts[parts.length - 1]);
-    const archDate = new Date(y, m - 1);
-    if (from && archDate < new Date(from.getFullYear(), from.getMonth())) return false;
-    if (to && archDate > new Date(to.getFullYear(), to.getMonth())) return false;
+    const p = url.split('/'), y = parseInt(p[p.length-2]), m = parseInt(p[p.length-1]);
+    const d = new Date(y, m-1);
+    if (from && d < new Date(from.getFullYear(), from.getMonth())) return false;
+    if (to   && d > new Date(to.getFullYear(),   to.getMonth()))   return false;
     return true;
   });
 
-  let allGames = [];
-  for (const url of filtered) {
-    const games = await fetchArchive(url);
-    allGames = allGames.concat(games);
-  }
+  let all = [];
+  for (const url of filtered) all = all.concat(await fetchArchive(url));
 
-  // Filter by time control
-  if (timeControl !== 'all') {
-    allGames = allGames.filter(g => {
-      const tc = (g.time_class || '').toLowerCase();
-      return tc === timeControl;
-    });
-  }
-
-  // Filter by date range
-  if (from || to) {
-    allGames = allGames.filter(g => {
-      const d = new Date(g.end_time * 1000);
-      if (from && d < from) return false;
-      if (to && d > to) return false;
-      return true;
-    });
-  }
-
-  return allGames;
+  if (tc !== 'all') all = all.filter(g => (g.time_class||'').toLowerCase() === tc);
+  if (from || to) all = all.filter(g => {
+    const d = new Date(g.end_time * 1000);
+    if (from && d < from) return false;
+    if (to   && d > to)   return false;
+    return true;
+  });
+  return all;
 }
 
-// ─── PGN / Opening parsing ───────────────────────────────────────────────────
+// ─── PGN helpers ─────────────────────────────────────────────────────────────
 function extractMoves(pgn) {
-  // Remove headers and annotations
-  const cleaned = pgn.replace(/\[.*?\]\s*/g, '').replace(/\{[^}]*\}/g, '').replace(/\$\d+/g, '').trim();
-  const tokens = cleaned.split(/\s+/).filter(t => t && !t.match(/^\d+\./) && !t.match(/^(1-0|0-1|1\/2-1\/2|\*)$/));
-  return tokens;
+  return pgn.replace(/\[.*?\]\s*/g,'').replace(/\{[^}]*\}/g,'').replace(/\$\d+/g,'')
+    .trim().split(/\s+/).filter(t => t && !t.match(/^\d+\./) && !t.match(/^(1-0|0-1|1\/2-1\/2|\*)$/));
 }
 
-// Opening book: move sequence -> name (longest match wins)
 const OPENING_BOOK = {
-  // e4 openings
-  'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O': 'Ruy Lopez: Closed',
-  'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6': 'Ruy Lopez: Morphy Defence',
-  'e4 e5 Nf3 Nc6 Bb5 a6': 'Ruy Lopez: Morphy Defence',
-  'e4 e5 Nf3 Nc6 Bb5 Nf6': 'Ruy Lopez: Berlin Defence',
-  'e4 e5 Nf3 Nc6 Bb5 f5': 'Ruy Lopez: Schliemann',
-  'e4 e5 Nf3 Nc6 Bb5': 'Ruy Lopez',
-  'e4 e5 Nf3 Nc6 Bc4 Bc5 c3': 'Giuoco Piano: Giuoco Pianissimo',
-  'e4 e5 Nf3 Nc6 Bc4 Bc5': 'Giuoco Piano',
-  'e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5': 'Two Knights: Fried Liver Attack',
-  'e4 e5 Nf3 Nc6 Bc4 Nf6': 'Two Knights Defence',
-  'e4 e5 Nf3 Nc6 Bc4': 'Italian Game',
-  'e4 e5 Nf3 Nc6 d4 exd4 Nxd4': 'Scotch Game',
-  'e4 e5 Nf3 Nc6 d4': 'Scotch Game',
-  'e4 e5 Nf3 Nc6 Nc3 Nf6 Bb5': 'Four Knights: Spanish',
-  'e4 e5 Nf3 Nc6 Nc3 Nf6': 'Four Knights Game',
-  'e4 e5 Nf3 Nc6 Nc3': 'Three Knights Game',
-  'e4 e5 Nf3 Nf6 Nxe5': 'Petrov: Classical',
-  'e4 e5 Nf3 Nf6': 'Petrov Defence',
-  'e4 e5 Nf3 d6': 'Philidor Defence',
-  'e4 e5 Nf3 f5': 'Latvian Gambit',
-  'e4 e5 Nc3 Nf6': 'Vienna: Frankenstein-Dracula',
-  'e4 e5 Nc3 Bc5': 'Vienna: Mieses',
-  'e4 e5 Nc3': 'Vienna Game',
-  'e4 e5 f4 exf4 Nf3': "King's Gambit Accepted: King's Knight",
-  'e4 e5 f4 exf4': "King's Gambit Accepted",
-  'e4 e5 f4 Bc5': "King's Gambit Declined",
-  'e4 e5 f4': "King's Gambit",
-  'e4 e5 d4 exd4': 'Centre Game',
-  'e4 e5': 'Open Game',
-  // Sicilian
-  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6': 'Sicilian: Najdorf',
-  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6': 'Sicilian: Dragon',
-  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6': 'Sicilian: Scheveningen',
-  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3': 'Sicilian: Open (d6)',
-  'e4 c5 Nf3 d6 d4 cxd4 Nxd4': 'Sicilian: Open (d6)',
-  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 d6': 'Sicilian: Classical',
-  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 g6': 'Sicilian: Accelerated Dragon',
-  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4': 'Sicilian: Open (Nc6)',
-  'e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6': 'Sicilian: Taimanov',
-  'e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6': 'Sicilian: Kan',
-  'e4 c5 Nf3 e6 d4': 'Sicilian: Open (e6)',
-  'e4 c5 c3 d5': 'Sicilian: Alapin, ...d5',
-  'e4 c5 c3': 'Sicilian: Alapin',
-  'e4 c5 Nc3': 'Sicilian: Closed',
-  'e4 c5 d4': 'Sicilian: Morra Gambit',
-  'e4 c5 Nf3': 'Sicilian Defence',
-  'e4 c5': 'Sicilian Defence',
-  // French
-  'e4 e6 d4 d5 e5 c5': 'French: Advance, ...c5',
-  'e4 e6 d4 d5 e5': 'French: Advance',
-  'e4 e6 d4 d5 exd5': 'French: Exchange',
-  'e4 e6 d4 d5 Nc3 Bb4': 'French: Winawer',
-  'e4 e6 d4 d5 Nc3 Nf6': 'French: Classical',
-  'e4 e6 d4 d5 Nc3': 'French: Classical',
-  'e4 e6 d4 d5 Nd2': 'French: Tarrasch',
-  'e4 e6 d4 d5': 'French Defence',
-  'e4 e6': 'French Defence',
-  // Caro-Kann
-  'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5': 'Caro-Kann: Classical',
-  'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7': 'Caro-Kann: Karpov',
-  'e4 c6 d4 d5 e5': 'Caro-Kann: Advance',
-  'e4 c6 d4 d5 exd5': 'Caro-Kann: Exchange',
-  'e4 c6 d4 d5 Nc3': 'Caro-Kann: Classical',
-  'e4 c6 d4 d5': 'Caro-Kann Defence',
-  'e4 c6': 'Caro-Kann Defence',
-  // Other e4
-  'e4 d5 exd5 Qxd5 Nc3 Qa5': 'Scandinavian: Classical',
-  'e4 d5 exd5 Nf6': 'Scandinavian: Modern',
-  'e4 d5 exd5': 'Scandinavian Defence',
-  'e4 d6 d4 Nf6 Nc3 g6': 'Pirc Defence',
-  'e4 d6 d4 Nf6': 'Pirc Defence',
-  'e4 g6 d4 Bg7': 'Modern Defence',
-  'e4 Nf6 e5 Nd5': "Alekhine's Defence: Modern",
-  'e4 Nf6': "Alekhine's Defence",
-  'e4 d6': 'Pirc/Wade Defence',
-  // d4 openings
-  "d4 d5 c4 e6 Nc3 Nf6 Bg5": "Queen's Gambit Declined: Orthodox",
-  "d4 d5 c4 e6 Nf3 Nf6 Nc3 Be7": "Queen's Gambit Declined: Orthodox",
-  "d4 d5 c4 e6 Nc3 Nf6": "Queen's Gambit Declined",
-  "d4 d5 c4 e6": "Queen's Gambit Declined",
-  "d4 d5 c4 dxc4 Nf3 Nf6": "Queen's Gambit Accepted: Classical",
-  "d4 d5 c4 dxc4": "Queen's Gambit Accepted",
-  "d4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4": 'Slav: Czech',
-  "d4 d5 c4 c6 Nf3 Nf6 Nc3": 'Slav Defence',
-  "d4 d5 c4 c6 Nf3 Nf6": 'Slav Defence',
-  "d4 d5 c4 c6": 'Slav Defence',
-  "d4 d5 c4 Nf6": "Marshall Defence",
-  "d4 d5 c4": "Queen's Gambit",
-  "d4 d5 Nf3 Nf6 c4": "Queen's Gambit (transposition)",
-  "d4 d5 Nf3": "Queen's Pawn: London/Torre",
-  "d4 d5 Bf4": 'London System',
-  "d4 d5": "Queen's Pawn Game",
-  // Indian defences
-  "d4 Nf6 c4 e6 Nc3 Bb4 e3": 'Nimzo-Indian: Rubinstein',
-  "d4 Nf6 c4 e6 Nc3 Bb4 Qc2": 'Nimzo-Indian: Classical',
-  "d4 Nf6 c4 e6 Nc3 Bb4": 'Nimzo-Indian Defence',
-  "d4 Nf6 c4 e6 Nf3 b6 g3 Bb7": "Queen's Indian: Fianchetto",
-  "d4 Nf6 c4 e6 Nf3 b6": "Queen's Indian Defence",
-  "d4 Nf6 c4 e6 g3": 'Catalan Opening',
-  "d4 Nf6 c4 e6": "Nimzo/Queen's Indian (pre)",
-  "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O": "King's Indian: Main Line",
-  "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3": "King's Indian: Samisch",
-  "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6": "King's Indian Defence",
-  "d4 Nf6 c4 g6 Nc3 Bg7": "King's Indian Defence",
-  "d4 Nf6 c4 g6 Nc3": "King's Indian Defence",
-  "d4 Nf6 c4 g6": "King's Indian Defence",
-  "d4 Nf6 c4 c5 d5 e6": 'Benoni: Modern',
-  "d4 Nf6 c4 c5 d5": 'Benoni Defence',
-  "d4 Nf6 c4 c5": 'Benoni Defence',
-  "d4 Nf6 Nf3 g6 c4": "King's Indian (transposition)",
-  "d4 Nf6 Nf3 d5 c4": "Queen's Gambit (transposition)",
-  "d4 Nf6 Bf4": 'London System',
-  "d4 Nf6 Nf3": 'Indian Game',
-  "d4 Nf6 c4": 'Indian Defence',
-  "d4 Nf6": 'Indian Defence',
-  "d4 f5 c4 Nf6 Nc3 e6": 'Dutch: Classical',
-  "d4 f5 c4 Nf6 g3": 'Dutch: Leningrad',
-  "d4 f5 c4 e6": 'Dutch: Stonewall (pre)',
-  "d4 f5": 'Dutch Defence',
-  "d4 e6 c4 f5": 'Dutch: Classical',
-  "d4 e6 Nf3 Nf6 c4": 'English/QID transposition',
-  // English & flank
-  "c4 e5 Nc3 Nf6 Nf3 Nc6 g3": 'English: Four Knights',
-  "c4 e5 Nc3 Nf6": 'English: Reversed Sicilian',
-  "c4 e5 Nc3": 'English: Reversed Sicilian',
-  "c4 e5 g3": 'English: King\'s English',
-  "c4 e5": 'English: King\'s English',
-  "c4 c5 Nf3 Nf6 Nc3": 'English: Symmetrical',
-  "c4 c5": 'English: Symmetrical',
-  "c4 Nf6 Nc3 d5": 'English: Agincourt',
-  "c4 Nf6": 'English: Anglo-Indian',
-  "c4 e6": 'English: Agincourt',
-  "c4": 'English Opening',
-  "Nf3 d5 c4 e6": "Réti: Queen's Gambit Invitation",
-  "Nf3 d5 c4 c6": 'Réti: Slav',
-  "Nf3 d5 c4": "Réti Opening",
-  "Nf3 Nf6 c4": 'Réti Opening',
-  "Nf3 d5 g3": 'Réti Opening',
-  "Nf3 d5": 'Réti Opening',
-  "Nf3": 'Réti/Zukertort Opening',
-  "g3 d5": "King's Fianchetto",
-  "g3": "King's Fianchetto Opening",
-  "b3 e5": 'Nimzowitsch-Larsen: Classical',
-  "b3": 'Nimzowitsch-Larsen Attack',
-  "b4 e5": 'Polish: Classical',
-  "b4": 'Polish Opening',
-  "f4": "Bird's Opening",
-  "d4": "Queen's Pawn Game",
-  "e4": "King's Pawn Game",
+  'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O':'Ruy Lopez: Closed',
+  'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6':'Ruy Lopez: Morphy Defence',
+  'e4 e5 Nf3 Nc6 Bb5 a6':'Ruy Lopez: Morphy Defence',
+  'e4 e5 Nf3 Nc6 Bb5 Nf6':'Ruy Lopez: Berlin Defence',
+  'e4 e5 Nf3 Nc6 Bb5 f5':'Ruy Lopez: Schliemann',
+  'e4 e5 Nf3 Nc6 Bb5':'Ruy Lopez',
+  'e4 e5 Nf3 Nc6 Bc4 Bc5 c3':'Giuoco Piano: Pianissimo',
+  'e4 e5 Nf3 Nc6 Bc4 Bc5':'Giuoco Piano',
+  'e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5':'Two Knights: Fried Liver',
+  'e4 e5 Nf3 Nc6 Bc4 Nf6':'Two Knights Defence',
+  'e4 e5 Nf3 Nc6 Bc4':'Italian Game',
+  'e4 e5 Nf3 Nc6 d4 exd4 Nxd4':'Scotch Game',
+  'e4 e5 Nf3 Nc6 d4':'Scotch Game',
+  'e4 e5 Nf3 Nc6 Nc3 Nf6 Bb5':'Four Knights: Spanish',
+  'e4 e5 Nf3 Nc6 Nc3 Nf6':'Four Knights Game',
+  'e4 e5 Nf3 Nc6 Nc3':'Three Knights Game',
+  'e4 e5 Nf3 Nf6 Nxe5':'Petrov: Classical',
+  'e4 e5 Nf3 Nf6':'Petrov Defence',
+  'e4 e5 Nf3 d6':'Philidor Defence',
+  'e4 e5 Nc3 Nf6':'Vienna: Frankenstein-Dracula',
+  'e4 e5 Nc3 Bc5':'Vienna: Mieses',
+  'e4 e5 Nc3':'Vienna Game',
+  'e4 e5 f4 exf4 Nf3':"King's Gambit Accepted: King's Knight",
+  'e4 e5 f4 exf4':"King's Gambit Accepted",
+  'e4 e5 f4 Bc5':"King's Gambit Declined",
+  'e4 e5 f4':"King's Gambit",
+  'e4 e5 d4 exd4':'Centre Game',
+  'e4 e5':'Open Game',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6':'Sicilian: Najdorf',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6':'Sicilian: Dragon',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6':'Sicilian: Scheveningen',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3':'Sicilian: Open (d6)',
+  'e4 c5 Nf3 d6 d4 cxd4 Nxd4':'Sicilian: Open (d6)',
+  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 d6':'Sicilian: Classical',
+  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 g6':'Sicilian: Accelerated Dragon',
+  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4':'Sicilian: Open (Nc6)',
+  'e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6':'Sicilian: Taimanov',
+  'e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6':'Sicilian: Kan',
+  'e4 c5 c3 d5':'Sicilian: Alapin, ...d5',
+  'e4 c5 c3':'Sicilian: Alapin',
+  'e4 c5 Nc3':'Sicilian: Closed',
+  'e4 c5 d4':'Sicilian: Morra Gambit',
+  'e4 c5 Nf3':'Sicilian Defence',
+  'e4 c5':'Sicilian Defence',
+  'e4 e6 d4 d5 e5 c5':'French: Advance, ...c5',
+  'e4 e6 d4 d5 e5':'French: Advance',
+  'e4 e6 d4 d5 exd5':'French: Exchange',
+  'e4 e6 d4 d5 Nc3 Bb4':'French: Winawer',
+  'e4 e6 d4 d5 Nc3 Nf6':'French: Classical',
+  'e4 e6 d4 d5 Nc3':'French: Classical',
+  'e4 e6 d4 d5 Nd2':'French: Tarrasch',
+  'e4 e6 d4 d5':'French Defence',
+  'e4 e6':'French Defence',
+  'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5':'Caro-Kann: Classical',
+  'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7':'Caro-Kann: Karpov',
+  'e4 c6 d4 d5 e5':'Caro-Kann: Advance',
+  'e4 c6 d4 d5 exd5':'Caro-Kann: Exchange',
+  'e4 c6 d4 d5 Nc3':'Caro-Kann: Classical',
+  'e4 c6 d4 d5':'Caro-Kann Defence',
+  'e4 c6':'Caro-Kann Defence',
+  'e4 d5 exd5 Qxd5 Nc3 Qa5':'Scandinavian: Classical',
+  'e4 d5 exd5 Nf6':'Scandinavian: Modern',
+  'e4 d5 exd5':'Scandinavian Defence',
+  'e4 d6 d4 Nf6 Nc3 g6':'Pirc Defence',
+  'e4 d6 d4 Nf6':'Pirc Defence',
+  'e4 g6 d4 Bg7':'Modern Defence',
+  'e4 Nf6 e5 Nd5':"Alekhine's Defence: Modern",
+  'e4 Nf6':"Alekhine's Defence",
+  'd4 d5 c4 e6 Nc3 Nf6 Bg5':"Queen's Gambit Declined: Orthodox",
+  'd4 d5 c4 e6 Nc3 Nf6':"Queen's Gambit Declined",
+  'd4 d5 c4 e6':"Queen's Gambit Declined",
+  'd4 d5 c4 dxc4 Nf3 Nf6':"Queen's Gambit Accepted: Classical",
+  'd4 d5 c4 dxc4':"Queen's Gambit Accepted",
+  'd4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4':'Slav: Czech',
+  'd4 d5 c4 c6 Nf3 Nf6 Nc3':'Slav Defence',
+  'd4 d5 c4 c6 Nf3 Nf6':'Slav Defence',
+  'd4 d5 c4 c6':'Slav Defence',
+  'd4 d5 c4':"Queen's Gambit",
+  'd4 d5 Bf4':'London System',
+  'd4 d5':"Queen's Pawn Game",
+  'd4 Nf6 c4 e6 Nc3 Bb4 e3':'Nimzo-Indian: Rubinstein',
+  'd4 Nf6 c4 e6 Nc3 Bb4 Qc2':'Nimzo-Indian: Classical',
+  'd4 Nf6 c4 e6 Nc3 Bb4':'Nimzo-Indian Defence',
+  'd4 Nf6 c4 e6 Nf3 b6 g3 Bb7':"Queen's Indian: Fianchetto",
+  'd4 Nf6 c4 e6 Nf3 b6':"Queen's Indian Defence",
+  'd4 Nf6 c4 e6 g3':'Catalan Opening',
+  'd4 Nf6 c4 e6':"Nimzo/Queen's Indian",
+  'd4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O':"King's Indian: Main Line",
+  'd4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3':"King's Indian: Samisch",
+  'd4 Nf6 c4 g6 Nc3 Bg7 e4 d6':"King's Indian Defence",
+  'd4 Nf6 c4 g6 Nc3 Bg7':"King's Indian Defence",
+  'd4 Nf6 c4 g6':"King's Indian Defence",
+  'd4 Nf6 c4 c5 d5 e6':'Benoni: Modern',
+  'd4 Nf6 c4 c5 d5':'Benoni Defence',
+  'd4 Nf6 c4 c5':'Benoni Defence',
+  'd4 Nf6 Bf4':'London System',
+  'd4 Nf6 c4':'Indian Defence',
+  'd4 Nf6':'Indian Defence',
+  'd4 f5 c4 Nf6 Nc3 e6':'Dutch: Classical',
+  'd4 f5 c4 Nf6 g3':'Dutch: Leningrad',
+  'd4 f5':'Dutch Defence',
+  'c4 e5 Nc3 Nf6 Nf3 Nc6 g3':'English: Four Knights',
+  'c4 e5 Nc3 Nf6':'English: Reversed Sicilian',
+  'c4 e5 Nc3':'English: Reversed Sicilian',
+  "c4 e5 g3":"English: King's English",
+  "c4 e5":"English: King's English",
+  'c4 c5 Nf3 Nf6 Nc3':'English: Symmetrical',
+  'c4 c5':'English: Symmetrical',
+  'c4 Nf6 Nc3 d5':'English: Agincourt',
+  'c4 Nf6':'English: Anglo-Indian',
+  'c4':'English Opening',
+  "Nf3 d5 c4 e6":"Réti: QG Invitation",
+  "Nf3 d5 c4 c6":"Réti: Slav",
+  "Nf3 d5 c4":"Réti Opening",
+  "Nf3 Nf6 c4":"Réti Opening",
+  "Nf3 d5":"Réti Opening",
+  "Nf3":"Réti/Zukertort Opening",
+  "g3":"King's Fianchetto Opening",
+  "b3":"Nimzowitsch-Larsen Attack",
+  "b4":"Polish Opening",
+  "f4":"Bird's Opening",
 };
 
-function getOpeningKey(pgn, maxMoves = 5) {
-  const moves = extractMoves(pgn);
-  return moves.slice(0, maxMoves * 2).join(' ') || 'Unknown';
-}
-
 function getOpeningName(pgn) {
-  // First try PGN headers (chess.com includes these)
-  const openingMatch = pgn.match(/\[Opening "([^"]+)"\]/);
-  const variationMatch = pgn.match(/\[Variation "([^"]+)"\]/);
-  if (openingMatch) {
-    return openingMatch[1] + (variationMatch ? ': ' + variationMatch[1] : '');
-  }
-
-  // Fall back to move-sequence lookup (longest match wins)
+  const om = pgn.match(/\[Opening "([^"]+)"\]/);
+  const vm = pgn.match(/\[Variation "([^"]+)"\]/);
+  if (om) return om[1] + (vm ? ': ' + vm[1] : '');
   const moves = extractMoves(pgn);
   for (let len = 10; len >= 1; len--) {
     const key = moves.slice(0, len).join(' ');
     if (OPENING_BOOK[key]) return OPENING_BOOK[key];
   }
-
-  const ecoMatch = pgn.match(/\[ECO "([^"]+)"\]/);
-  if (ecoMatch) return 'ECO ' + ecoMatch[1];
+  const eco = pgn.match(/\[ECO "([^"]+)"\]/);
+  if (eco) return 'ECO ' + eco[1];
   return moves.slice(0, 4).join(' ') || 'Unknown';
 }
 
 function parseGameMoves(pgn) {
   const chess = new Chess();
   const moves = extractMoves(pgn);
-  const positions = [];
-  positions.push({ fen: chess.fen(), san: null, moveNum: 0 });
+  const positions = [{ fen: chess.fen(), san: null }];
   for (const san of moves) {
     try {
-      const move = chess.move(san, { sloppy: true });
-      if (!move) break;
-      positions.push({ fen: chess.fen(), san: move.san, moveNum: positions.length });
+      const m = chess.move(san, { sloppy: true });
+      if (!m) break;
+      positions.push({ fen: chess.fen(), san: m.san });
     } catch { break; }
   }
   return positions;
 }
 
-// ─── Analysis engine ─────────────────────────────────────────────────────────
+// ─── Analysis ─────────────────────────────────────────────────────────────────
 async function analyseGame(game, username) {
-  const cacheKey = `chess_analysis_${game.uuid}`;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    try { return JSON.parse(cached); } catch {}
-  }
+  const key = `chess_analysis_${game.uuid}`;
+  const cached = localStorage.getItem(key);
+  if (cached) { try { return JSON.parse(cached); } catch {} }
 
   const positions = parseGameMoves(game.pgn);
   if (positions.length < 3) return null;
 
-  const isWhite = (game.white?.username || '').toLowerCase() === username.toLowerCase();
-  const playerColor = isWhite ? 'white' : 'black';
-
-  let blunders = 0, mistakes = 0, inaccuracies = 0;
-  let phaseLoss = null;
-  let blunderMoves = [];
-  let prevScore = null;
+  const isWhite = (game.white?.username||'').toLowerCase() === username.toLowerCase();
+  let blunders = 0, mistakes = 0, inaccuracies = 0, phaseLoss = null, blunderMoves = [], prevScore = null;
 
   for (let i = 0; i < positions.length - 1; i++) {
-    const pos = positions[i];
-    const result = await evaluatePosition(pos.fen, 14);
-    if (!result) continue;
-
-    let score = result.score;
-    // Normalise: positive = good for white
-    const moveIsPlayerMove = (isWhite && i % 2 === 0) || (!isWhite && i % 2 === 1);
-
-    if (prevScore !== null && moveIsPlayerMove) {
-      // Eval from player's perspective: if white, positive is good; if black, negative is good
-      const playerPrev = isWhite ? prevScore : -prevScore;
-      const playerCurr = isWhite ? score : -score;
-      const swing = playerPrev - playerCurr;
-
+    const ev = await evaluatePosition(positions[i].fen, 14);
+    if (!ev) continue;
+    const playerMove = (isWhite && i % 2 === 0) || (!isWhite && i % 2 === 1);
+    if (prevScore !== null && playerMove) {
+      const pp = isWhite ? prevScore : -prevScore;
+      const pc = isWhite ? ev.score  : -ev.score;
+      const swing = pp - pc;
       if (swing >= 150) {
         blunders++;
-        blunderMoves.push({ moveIndex: i, san: positions[i + 1]?.san, swing, fen: pos.fen, bestMove: result.bestMove });
-        if (!phaseLoss) {
-          const moveNum = Math.ceil(i / 2);
-          phaseLoss = moveNum < 10 ? 'opening' : moveNum <= 30 ? 'middlegame' : 'endgame';
-        }
+        blunderMoves.push({ moveIndex: i, san: positions[i+1]?.san, swing, fen: positions[i].fen, bestMove: ev.bestMove });
+        if (!phaseLoss) { const mn = Math.ceil(i/2); phaseLoss = mn < 10 ? 'opening' : mn <= 30 ? 'middlegame' : 'endgame'; }
       } else if (swing >= 50) {
         mistakes++;
-        blunderMoves.push({ moveIndex: i, san: positions[i + 1]?.san, swing, fen: pos.fen, bestMove: result.bestMove, isMistake: true });
-      } else if (swing >= 20) {
-        inaccuracies++;
-      }
+        blunderMoves.push({ moveIndex: i, san: positions[i+1]?.san, swing, fen: positions[i].fen, bestMove: ev.bestMove, isMistake: true });
+      } else if (swing >= 20) inaccuracies++;
     }
-    prevScore = score;
+    prevScore = ev.score;
   }
 
-  const result = { blunders, mistakes, inaccuracies, phaseLoss, blunderMoves, playerColor };
-  localStorage.setItem(cacheKey, JSON.stringify(result));
+  const result = { blunders, mistakes, inaccuracies, phaseLoss, blunderMoves, playerColor: isWhite ? 'white' : 'black' };
+  localStorage.setItem(key, JSON.stringify(result));
   return result;
 }
 
-// ─── Rendering helpers ───────────────────────────────────────────────────────
-function wlBar(w, d, l) {
-  const total = w + d + l || 1;
-  return `<div class="wl-bar">
-    <div class="w" style="width:${w/total*100}%"></div>
-    <div class="d" style="width:${d/total*100}%"></div>
-    <div class="l" style="width:${l/total*100}%"></div>
-  </div>`;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function isPlayerWhite(game) { return (game.white?.username||'').toLowerCase() === state.username.toLowerCase(); }
+function gameOutcome(game) {
+  const r = isPlayerWhite(game) ? game.white?.result : game.black?.result;
+  return r === 'win' ? 'win' : ['checkmated','resigned','timeout','abandoned'].includes(r) ? 'loss' : 'draw';
 }
-
-function winPct(w, d, l) {
-  const total = w + d + l || 1;
-  return ((w + d * 0.5) / total * 100).toFixed(0) + '%';
+function wlBar(w,d,l) {
+  const t = w+d+l||1;
+  return `<div class="wl-bar"><div class="w" style="width:${w/t*100}%"></div><div class="d" style="width:${d/t*100}%"></div><div class="l" style="width:${l/t*100}%"></div></div>`;
 }
+function winPct(w,d,l) { return ((w+d*.5)/(w+d+l||1)*100).toFixed(0)+'%'; }
+function fmtDate(ts) { return new Date(ts*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}); }
 
-function formatDate(ts) {
-  return new Date(ts * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
-}
-
-// ─── SVG Rating Chart ─────────────────────────────────────────────────────────
-function drawRatingChart(games, username) {
-  const points = games
-    .map(g => {
-      const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
-      return {
-        ts: g.end_time,
-        rating: isWhite ? g.white?.rating : g.black?.rating,
-      };
-    })
-    .filter(p => p.rating)
-    .sort((a, b) => a.ts - b.ts);
-
-  if (points.length < 2) return;
-
-  const svg = document.getElementById('rating-chart');
-  const W = svg.clientWidth || 500, H = 220;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-  const pad = { top: 16, right: 16, bottom: 28, left: 44 };
-  const iW = W - pad.left - pad.right;
-  const iH = H - pad.top - pad.bottom;
-
-  const ratings = points.map(p => p.rating);
-  const minR = Math.min(...ratings) - 20;
-  const maxR = Math.max(...ratings) + 20;
-  const minT = points[0].ts, maxT = points[points.length - 1].ts;
-
-  const xScale = t => pad.left + (t - minT) / (maxT - minT || 1) * iW;
-  const yScale = r => pad.top + (1 - (r - minR) / (maxR - minR || 1)) * iH;
-
-  // Grid lines
-  let html = '';
-  const steps = 5;
-  for (let i = 0; i <= steps; i++) {
-    const r = minR + (maxR - minR) * i / steps;
-    const y = yScale(r);
-    html += `<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
-    html += `<text x="${pad.left - 6}" y="${y + 4}" text-anchor="end" fill="#6b7280" font-size="11">${Math.round(r)}</text>`;
-  }
-
-  // Line path
-  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(p.ts).toFixed(1)},${yScale(p.rating).toFixed(1)}`).join(' ');
-  html += `<path d="${d}" fill="none" stroke="#7c6af7" stroke-width="2"/>`;
-
-  // Latest rating dot + label
-  const last = points[points.length - 1];
-  html += `<circle cx="${xScale(last.ts)}" cy="${yScale(last.rating)}" r="4" fill="#7c6af7"/>`;
-  html += `<text x="${xScale(last.ts) - 6}" y="${yScale(last.rating) - 8}" fill="#e2e8f0" font-size="11">${last.rating}</text>`;
-
-  svg.innerHTML = html;
-}
-
-// ─── Overview ────────────────────────────────────────────────────────────────
-function renderOverview(games, username) {
+// ─── Overview ─────────────────────────────────────────────────────────────────
+function renderOverview(games) {
   document.getElementById('overview-empty').style.display = 'none';
   document.getElementById('overview-content').style.display = 'block';
 
-  let wins = 0, losses = 0, draws = 0;
-  let ratingSum = 0, ratingCount = 0;
-
+  let wins=0, losses=0, draws=0, rSum=0, rN=0;
   for (const g of games) {
-    const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
-    const result = isWhite ? g.white?.result : g.black?.result;
-    const rating = isWhite ? g.white?.rating : g.black?.rating;
-    if (rating) { ratingSum += rating; ratingCount++; }
-    if (result === 'win') wins++;
-    else if (['checkmated', 'resigned', 'timeout', 'abandoned'].includes(result)) losses++;
+    const iw = isPlayerWhite(g);
+    const r = iw ? g.white?.result : g.black?.result;
+    const rating = iw ? g.white?.rating : g.black?.rating;
+    if (rating) { rSum += rating; rN++; }
+    if (r === 'win') wins++;
+    else if (['checkmated','resigned','timeout','abandoned'].includes(r)) losses++;
     else draws++;
   }
-
-  const avgRating = ratingCount ? Math.round(ratingSum / ratingCount) : '—';
-  const latestRating = (() => {
-    const sorted = [...games].sort((a, b) => b.end_time - a.end_time);
-    const g = sorted[0];
-    if (!g) return '—';
-    const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
-    return (isWhite ? g.white?.rating : g.black?.rating) || '—';
-  })();
+  const sorted = [...games].sort((a,b) => b.end_time - a.end_time);
+  const g0 = sorted[0];
+  const latestR = g0 ? (isPlayerWhite(g0) ? g0.white?.rating : g0.black?.rating) || '—' : '—';
 
   document.getElementById('stat-cards').innerHTML = `
     <div class="stat-card"><div class="value" style="color:var(--accent)">${games.length}</div><div class="label">Games Loaded</div></div>
-    <div class="stat-card"><div class="value" style="color:var(--green)">${wins}</div><div class="label">Wins</div><div class="sub">${winPct(wins, draws, losses)} score</div></div>
+    <div class="stat-card"><div class="value" style="color:var(--green)">${wins}</div><div class="label">Wins</div><div class="sub">${winPct(wins,draws,losses)} score</div></div>
     <div class="stat-card"><div class="value" style="color:var(--red)">${losses}</div><div class="label">Losses</div></div>
-    <div class="stat-card"><div class="value">${latestRating}</div><div class="label">Current Rating</div><div class="sub">Avg ${avgRating}</div></div>
-  `;
+    <div class="stat-card"><div class="value">${latestR}</div><div class="label">Current Rating</div><div class="sub">Avg ${rN ? Math.round(rSum/rN) : '—'}</div></div>`;
 
-  // Results donut (SVG-based pie)
+  // Pie chart
   const canvas = document.getElementById('results-chart');
   const ctx = canvas.getContext('2d');
   const W = canvas.parentElement.clientWidth - 40 || 300;
   canvas.width = W; canvas.height = 200;
-  const cx = W / 2, cy = 85, r = 70;
-  const total = wins + draws + losses || 1;
+  const cx = W/2, cy = 82, r = 68, total = wins+draws+losses||1;
   const slices = [
-    { val: wins, color: '#22c55e', label: `Win ${(wins/total*100).toFixed(0)}%` },
-    { val: draws, color: '#f59e0b', label: `Draw ${(draws/total*100).toFixed(0)}%` },
-    { val: losses, color: '#ef4444', label: `Loss ${(losses/total*100).toFixed(0)}%` },
+    {val:wins,  color:'#22c55e', label:`Win ${(wins/total*100).toFixed(0)}%`},
+    {val:draws, color:'#f59e0b', label:`Draw ${(draws/total*100).toFixed(0)}%`},
+    {val:losses,color:'#ef4444', label:`Loss ${(losses/total*100).toFixed(0)}%`},
   ];
-  let start = -Math.PI / 2;
+  let start = -Math.PI/2;
   for (const s of slices) {
-    const angle = (s.val / total) * Math.PI * 2;
-    ctx.beginPath(); ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, start, start + angle);
-    ctx.closePath(); ctx.fillStyle = s.color; ctx.fill();
-    start += angle;
+    const angle = s.val/total*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,start+angle); ctx.closePath();
+    ctx.fillStyle = s.color; ctx.fill(); start += angle;
   }
-  // Legend
-  slices.forEach((s, i) => {
-    ctx.fillStyle = s.color;
-    ctx.fillRect(20, 165 + i * 0, 12, 12); // this won't look right in a row, do row
-  });
-  ctx.font = '12px Segoe UI, system-ui, sans-serif';
-  let lx = 20;
-  slices.forEach(s => {
-    ctx.fillStyle = s.color;
-    ctx.fillRect(lx, 168, 10, 10);
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(s.label, lx + 14, 178);
-    lx += ctx.measureText(s.label).width + 30;
-  });
+  ctx.font = '12px Segoe UI,system-ui,sans-serif';
+  let lx = 16;
+  for (const s of slices) {
+    ctx.fillStyle = s.color; ctx.fillRect(lx,168,10,10);
+    ctx.fillStyle = '#e2e8f0'; ctx.fillText(s.label, lx+14, 178);
+    lx += ctx.measureText(s.label).width + 28;
+  }
 
-  drawRatingChart(games, username);
-  renderPhaseDistribution(games, username);
-  renderBlunderTrend(games, username);
+  drawRatingChart(games);
+  renderPhaseDistribution();
+  renderBlunderTrend(games);
 }
 
-function renderPhaseDistribution(games, username) {
+function drawRatingChart(games) {
+  const points = games.map(g => ({
+    ts: g.end_time,
+    rating: isPlayerWhite(g) ? g.white?.rating : g.black?.rating,
+  })).filter(p => p.rating).sort((a,b) => a.ts - b.ts);
+  if (points.length < 2) return;
+
+  const svg = document.getElementById('rating-chart');
+  const W = svg.clientWidth||500, H = 220;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const pad = {top:16,right:16,bottom:28,left:44};
+  const iW = W-pad.left-pad.right, iH = H-pad.top-pad.bottom;
+  const ratings = points.map(p=>p.rating);
+  const minR = Math.min(...ratings)-20, maxR = Math.max(...ratings)+20;
+  const minT = points[0].ts, maxT = points[points.length-1].ts;
+  const xs = t => pad.left + (t-minT)/(maxT-minT||1)*iW;
+  const ys = r => pad.top  + (1-(r-minR)/(maxR-minR||1))*iH;
+
+  let html = '';
+  for (let i=0; i<=5; i++) {
+    const rv = minR + (maxR-minR)*i/5, y = ys(rv);
+    html += `<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
+    html += `<text x="${pad.left-6}" y="${y+4}" text-anchor="end" fill="#6b7280" font-size="11">${Math.round(rv)}</text>`;
+  }
+  const d = points.map((p,i) => `${i===0?'M':'L'}${xs(p.ts).toFixed(1)},${ys(p.rating).toFixed(1)}`).join(' ');
+  html += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+  const last = points[points.length-1];
+  html += `<circle cx="${xs(last.ts)}" cy="${ys(last.rating)}" r="4" fill="var(--accent)"/>`;
+  html += `<text x="${xs(last.ts)-6}" y="${ys(last.rating)-8}" fill="#e2e8f0" font-size="11">${last.rating}</text>`;
+  svg.innerHTML = html;
+}
+
+function renderPhaseDistribution() {
   const el = document.getElementById('phase-display');
   const results = Object.values(state.analysisResults);
-  if (!results.length) {
-    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Run analysis to see phase data</p>';
-    return;
-  }
-
-  const counts = { opening: 0, middlegame: 0, endgame: 0, unknown: 0 };
-  for (const r of results) {
-    const key = r.phaseLoss || 'unknown';
-    counts[key] = (counts[key] || 0) + 1;
-  }
-  const total = results.length || 1;
-
+  if (!results.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0">Analysis pending…</p>'; return; }
+  const counts = {opening:0,middlegame:0,endgame:0,unknown:0};
+  for (const r of results) counts[r.phaseLoss||'unknown']++;
+  const total = results.length||1;
   el.innerHTML = `
-    <div style="margin-bottom:16px">
-      <div class="phase-bar">
-        <div class="phase-seg" style="background:var(--red);width:${counts.opening/total*100}%">${counts.opening > 0 ? counts.opening : ''}</div>
-        <div class="phase-seg" style="background:var(--yellow);width:${counts.middlegame/total*100}%">${counts.middlegame > 0 ? counts.middlegame : ''}</div>
-        <div class="phase-seg" style="background:var(--blue);width:${counts.endgame/total*100}%">${counts.endgame > 0 ? counts.endgame : ''}</div>
-        <div class="phase-seg" style="background:var(--surface2);width:${counts.unknown/total*100}%;color:var(--text-muted)">${counts.unknown > 0 ? counts.unknown : ''}</div>
-      </div>
+    <div class="phase-bar" style="margin-bottom:16px">
+      <div class="phase-seg" style="background:var(--red);width:${counts.opening/total*100}%">${counts.opening||''}</div>
+      <div class="phase-seg" style="background:var(--yellow);width:${counts.middlegame/total*100}%">${counts.middlegame||''}</div>
+      <div class="phase-seg" style="background:var(--blue);width:${counts.endgame/total*100}%">${counts.endgame||''}</div>
+      <div class="phase-seg" style="background:var(--surface2);width:${counts.unknown/total*100}%;color:var(--text-muted)">${counts.unknown||''}</div>
     </div>
     <table>
       <tr><td><span style="color:var(--red)">■</span> Opening (&lt;10 moves)</td><td>${counts.opening} <span style="color:var(--text-muted)">(${(counts.opening/total*100).toFixed(0)}%)</span></td></tr>
       <tr><td><span style="color:var(--yellow)">■</span> Middlegame (10–30)</td><td>${counts.middlegame} <span style="color:var(--text-muted)">(${(counts.middlegame/total*100).toFixed(0)}%)</span></td></tr>
       <tr><td><span style="color:var(--blue)">■</span> Endgame (&gt;30 moves)</td><td>${counts.endgame} <span style="color:var(--text-muted)">(${(counts.endgame/total*100).toFixed(0)}%)</span></td></tr>
-    </table>
-  `;
+    </table>`;
 }
 
-function renderBlunderTrend(games, username) {
+function renderBlunderTrend(games) {
   const svg = document.getElementById('blunder-trend-chart');
-  const analysed = games
-    .filter(g => state.analysisResults[g.uuid])
-    .sort((a, b) => a.end_time - b.end_time);
-  if (analysed.length < 2) {
-    svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#6b7280" font-size="13">Analysis pending...</text>`;
-    return;
-  }
+  const analysed = games.filter(g => state.analysisResults[g.uuid]).sort((a,b) => a.end_time - b.end_time);
+  if (analysed.length < 2) { svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#6b7280" font-size="13">Analysis pending…</text>`; return; }
 
-  const W = svg.clientWidth || 500, H = 200;
+  const W = svg.clientWidth||500, H = 200;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const pad = { top: 16, right: 16, bottom: 28, left: 36 };
-  const iW = W - pad.left - pad.right, iH = H - pad.top - pad.bottom;
-
-  const points = analysed.map((g, i) => ({
-    x: i,
-    blunders: state.analysisResults[g.uuid].blunders,
-    mistakes: state.analysisResults[g.uuid].mistakes,
-  }));
-
-  const maxY = Math.max(...points.map(p => p.blunders + p.mistakes), 1);
-  const xScale = i => pad.left + i / (points.length - 1) * iW;
-  const yScale = v => pad.top + (1 - v / maxY) * iH;
+  const pad = {top:16,right:16,bottom:28,left:36};
+  const iW = W-pad.left-pad.right, iH = H-pad.top-pad.bottom;
+  const pts = analysed.map(g => ({ b: state.analysisResults[g.uuid].blunders, m: state.analysisResults[g.uuid].mistakes }));
+  const maxY = Math.max(...pts.map(p=>p.b+p.m),1);
+  const xs = i => pad.left + i/(pts.length-1)*iW;
+  const ys = v => pad.top  + (1-v/maxY)*iH;
 
   let html = '';
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.top + i / 4 * iH;
-    html += `<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
-    html += `<text x="${pad.left - 4}" y="${y + 4}" text-anchor="end" fill="#6b7280" font-size="10">${Math.round(maxY * (1 - i/4))}</text>`;
+  for (let i=0; i<=4; i++) {
+    const y = pad.top + i/4*iH;
+    html += `<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
+    html += `<text x="${pad.left-4}" y="${y+4}" text-anchor="end" fill="#6b7280" font-size="10">${Math.round(maxY*(1-i/4))}</text>`;
   }
-
-  // Blunder line
-  const bd = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(i).toFixed(1)},${yScale(p.blunders).toFixed(1)}`).join(' ');
-  html += `<path d="${bd}" fill="none" stroke="#ef4444" stroke-width="2"/>`;
-
-  // Mistake line
-  const md = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(i).toFixed(1)},${yScale(p.mistakes).toFixed(1)}`).join(' ');
-  html += `<path d="${md}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>`;
-
-  // Legend
+  html += `<path d="${pts.map((p,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(p.b).toFixed(1)}`).join(' ')}" fill="none" stroke="#ef4444" stroke-width="2"/>`;
+  html += `<path d="${pts.map((p,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(p.m).toFixed(1)}`).join(' ')}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>`;
   html += `<rect x="${pad.left}" y="${H-16}" width="10" height="3" fill="#ef4444"/>`;
-  html += `<text x="${pad.left + 14}" y="${H-12}" fill="#e2e8f0" font-size="11">Blunders</text>`;
-  html += `<rect x="${pad.left + 80}" y="${H-16}" width="10" height="3" fill="#f59e0b"/>`;
-  html += `<text x="${pad.left + 94}" y="${H-12}" fill="#e2e8f0" font-size="11">Mistakes</text>`;
-
+  html += `<text x="${pad.left+14}" y="${H-12}" fill="#e2e8f0" font-size="11">Blunders</text>`;
+  html += `<rect x="${pad.left+80}" y="${H-16}" width="10" height="3" fill="#f59e0b"/>`;
+  html += `<text x="${pad.left+94}" y="${H-12}" fill="#e2e8f0" font-size="11">Mistakes</text>`;
   svg.innerHTML = html;
 }
 
-// ─── Openings ────────────────────────────────────────────────────────────────
-function renderOpenings(games, username) {
+// ─── Openings ─────────────────────────────────────────────────────────────────
+let openingGamesMap = {}; // name -> [game, ...]
+
+function renderOpenings(games) {
   document.getElementById('openings-empty').style.display = 'none';
   document.getElementById('openings-content').style.display = 'block';
+  openingGamesMap = {};
 
   const whiteMap = {}, blackMap = {};
-
   for (const g of games) {
-    const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
-    const result = isWhite ? g.white?.result : g.black?.result;
-    const outcome = result === 'win' ? 'w' : ['checkmated','resigned','timeout','abandoned'].includes(result) ? 'l' : 'd';
+    const iw = isPlayerWhite(g);
+    const outcome = gameOutcome(g) === 'win' ? 'w' : gameOutcome(g) === 'loss' ? 'l' : 'd';
     const name = getOpeningName(g.pgn);
-    const map = isWhite ? whiteMap : blackMap;
-    if (!map[name]) map[name] = { w: 0, d: 0, l: 0 };
+    const map = iw ? whiteMap : blackMap;
+    if (!map[name]) map[name] = { w:0, d:0, l:0 };
     map[name][outcome]++;
+    if (!openingGamesMap[name]) openingGamesMap[name] = [];
+    openingGamesMap[name].push(g);
   }
 
-  const toRows = map => Object.entries(map)
-    .sort((a, b) => (b[1].w + b[1].d + b[1].l) - (a[1].w + a[1].d + a[1].l))
-    .slice(0, 20);
+  const toRows = map => Object.entries(map).sort((a,b) => (b[1].w+b[1].d+b[1].l)-(a[1].w+a[1].d+a[1].l)).slice(0,20);
 
   const tableHtml = rows => `
     <thead><tr><th>Opening</th><th>Games</th><th>W/D/L</th><th>Score</th></tr></thead>
     <tbody>${rows.map(([name, r]) => {
-      const total = r.w + r.d + r.l;
-      const pct = parseFloat(winPct(r.w, r.d, r.l));
-      const worst = pct < 40;
-      return `<tr>
-        <td style="${worst ? 'color:var(--red)' : ''}" title="${name}">${name.length > 40 ? name.slice(0,38)+'…' : name}</td>
+      const total = r.w+r.d+r.l;
+      const pct = parseFloat(winPct(r.w,r.d,r.l));
+      const bad = pct < 40;
+      const label = name.length > 38 ? name.slice(0,36)+'…' : name;
+      return `<tr class="opening-row" onclick="openOpeningDetail('${encodeURIComponent(name)}')">
+        <td title="${name}">${label}</td>
         <td>${total}</td>
-        <td>${wlBar(r.w, r.d, r.l)} <span style="font-size:11px;color:var(--text-muted)">${r.w}/${r.d}/${r.l}</span></td>
-        <td style="color:${worst ? 'var(--red)' : pct >= 55 ? 'var(--green)' : 'var(--text)'}">${pct}%</td>
+        <td>${wlBar(r.w,r.d,r.l)} <span style="font-size:11px;color:var(--text-muted)">${r.w}/${r.d}/${r.l}</span></td>
+        <td style="color:${bad?'var(--red)':pct>=55?'var(--green)':'var(--text)'}">${pct}%</td>
       </tr>`;
     }).join('')}</tbody>`;
 
@@ -942,168 +901,161 @@ function renderOpenings(games, username) {
   document.getElementById('openings-black-table').innerHTML = tableHtml(toRows(blackMap));
 }
 
-// ─── Blunders tab ────────────────────────────────────────────────────────────
-function renderBlunders(games, username) {
-  const results = games.map(g => ({ game: g, analysis: state.analysisResults[g.uuid] })).filter(x => x.analysis);
-  if (!results.length) return;
+function openOpeningDetail(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  const games = (openingGamesMap[name] || []).sort((a,b) => b.end_time - a.end_time);
 
-  document.getElementById('blunders-empty').style.display = 'none';
-  document.getElementById('blunders-content').style.display = 'block';
+  document.getElementById('opening-detail-title').textContent = name;
+  document.getElementById('opening-detail-badge').textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
 
-  const totalB = results.reduce((s, r) => s + r.analysis.blunders, 0);
-  const totalM = results.reduce((s, r) => s + r.analysis.mistakes, 0);
-  const avgB = (totalB / results.length).toFixed(1);
-
-  let whiteB = 0, whiteM = 0, whiteGames = 0;
-  let blackB = 0, blackM = 0, blackGames = 0;
-  for (const { analysis } of results) {
-    if (analysis.playerColor === 'white') { whiteB += analysis.blunders; whiteM += analysis.mistakes; whiteGames++; }
-    else { blackB += analysis.blunders; blackM += analysis.mistakes; blackGames++; }
-  }
-
-  document.getElementById('blunder-stats').innerHTML = `
-    <div class="stat-card"><div class="value" style="color:var(--red)">${totalB}</div><div class="label">Total Blunders</div><div class="sub">${avgB} per game avg</div></div>
-    <div class="stat-card"><div class="value" style="color:var(--yellow)">${totalM}</div><div class="label">Total Mistakes</div></div>
-    <div class="stat-card"><div class="value">${results.length}</div><div class="label">Games Analysed</div></div>
-  `;
-
-  // Worst games
-  const worst = [...results].sort((a, b) => b.analysis.blunders - a.analysis.blunders).slice(0, 10);
-  document.getElementById('blunder-games-table').innerHTML = `
-    <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th class="blunder">Blunders</th><th class="mistake">Mistakes</th></tr></thead>
-    <tbody>${worst.map(({ game: g, analysis }) => {
-      const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
-      const opponent = isWhite ? g.black?.username : g.white?.username;
-      const result = isWhite ? g.white?.result : g.black?.result;
-      const outcome = result === 'win' ? 'win' : ['checkmated','resigned','timeout','abandoned'].includes(result) ? 'loss' : 'draw';
-      return `<tr class="game-row" data-uuid="${g.uuid}" onclick="openGameInBoard('${g.uuid}')">
-        <td>${formatDate(g.end_time)}</td>
-        <td>${opponent || '?'}</td>
+  document.getElementById('opening-detail-table').innerHTML = `
+    <thead><tr><th>Date</th><th>Colour</th><th>Opponent</th><th>Result</th><th>Time Control</th><th>Blunders</th><th></th></tr></thead>
+    <tbody>${games.map(g => {
+      const iw = isPlayerWhite(g);
+      const opponent = iw ? g.black?.username : g.white?.username;
+      const outcome = gameOutcome(g);
+      const an = state.analysisResults[g.uuid];
+      return `<tr>
+        <td>${fmtDate(g.end_time)}</td>
+        <td><span class="badge badge-${iw?'w':'b'}">${iw?'White':'Black'}</span></td>
+        <td>${opponent||'?'} <span style="color:var(--text-muted);font-size:11px">(${iw?g.black?.rating:g.white?.rating||'?'})</span></td>
         <td><span class="badge badge-${outcome}">${outcome}</span></td>
-        <td class="blunder">${analysis.blunders}</td>
-        <td class="mistake">${analysis.mistakes}</td>
+        <td style="color:var(--text-muted)">${g.time_class||g.time_control||'?'}</td>
+        <td>${an ? `<span class="blunder">${an.blunders}??</span> <span class="mistake">${an.mistakes}?</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td><button class="btn btn-sm" onclick="openGameInBoard('${g.uuid}')">View</button></td>
       </tr>`;
     }).join('')}</tbody>`;
 
-  // Color breakdown
-  document.getElementById('blunder-color-breakdown').innerHTML = `
-    <table>
-      <thead><tr><th>Colour</th><th>Games</th><th>Blunders</th><th>Mistakes</th><th>Avg Blunders</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="badge badge-w">White</span></td>
-          <td>${whiteGames}</td>
-          <td class="blunder">${whiteB}</td>
-          <td class="mistake">${whiteM}</td>
-          <td>${whiteGames ? (whiteB/whiteGames).toFixed(1) : '—'}</td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-b">Black</span></td>
-          <td>${blackGames}</td>
-          <td class="blunder">${blackB}</td>
-          <td class="mistake">${blackM}</td>
-          <td>${blackGames ? (blackB/blackGames).toFixed(1) : '—'}</td>
-        </tr>
-      </tbody>
-    </table>
-  `;
+  document.getElementById('openings-list').style.display = 'none';
+  document.getElementById('opening-detail').classList.add('active');
 }
 
-// ─── Games tab ───────────────────────────────────────────────────────────────
-function renderGamesTab(games, username) {
+function closeOpeningDetail() {
+  document.getElementById('opening-detail').classList.remove('active');
+  document.getElementById('openings-list').style.display = '';
+}
+
+// ─── Blunders tab ─────────────────────────────────────────────────────────────
+function renderBlunders(games) {
+  const results = games.map(g => ({game:g, analysis:state.analysisResults[g.uuid]})).filter(x => x.analysis);
+  if (!results.length) return;
+  document.getElementById('blunders-empty').style.display = 'none';
+  document.getElementById('blunders-content').style.display = 'block';
+
+  const totalB = results.reduce((s,r)=>s+r.analysis.blunders,0);
+  const totalM = results.reduce((s,r)=>s+r.analysis.mistakes,0);
+  let wB=0,wM=0,wG=0,bB=0,bM=0,bG=0;
+  for (const {analysis:an} of results) {
+    if (an.playerColor==='white') {wB+=an.blunders;wM+=an.mistakes;wG++;} else {bB+=an.blunders;bM+=an.mistakes;bG++;}
+  }
+
+  document.getElementById('blunder-stats').innerHTML = `
+    <div class="stat-card"><div class="value" style="color:var(--red)">${totalB}</div><div class="label">Total Blunders</div><div class="sub">${(totalB/results.length).toFixed(1)} per game</div></div>
+    <div class="stat-card"><div class="value" style="color:var(--yellow)">${totalM}</div><div class="label">Total Mistakes</div></div>
+    <div class="stat-card"><div class="value">${results.length}</div><div class="label">Games Analysed</div></div>`;
+
+  const worst = [...results].sort((a,b)=>b.analysis.blunders-a.analysis.blunders).slice(0,10);
+  document.getElementById('blunder-games-table').innerHTML = `
+    <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th class="blunder">Blunders</th><th class="mistake">Mistakes</th></tr></thead>
+    <tbody>${worst.map(({game:g,analysis:an}) => {
+      const iw = isPlayerWhite(g);
+      const opp = iw ? g.black?.username : g.white?.username;
+      const outcome = gameOutcome(g);
+      return `<tr style="cursor:pointer" onclick="openGameInBoard('${g.uuid}')">
+        <td>${fmtDate(g.end_time)}</td><td>${opp||'?'}</td>
+        <td><span class="badge badge-${outcome}">${outcome}</span></td>
+        <td class="blunder">${an.blunders}</td><td class="mistake">${an.mistakes}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+
+  document.getElementById('blunder-color-breakdown').innerHTML = `
+    <table>
+      <thead><tr><th>Colour</th><th>Games</th><th>Blunders</th><th>Mistakes</th><th>Avg ??</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-w">White</span></td><td>${wG}</td><td class="blunder">${wB}</td><td class="mistake">${wM}</td><td>${wG?(wB/wG).toFixed(1):'—'}</td></tr>
+        <tr><td><span class="badge badge-b">Black</span></td><td>${bG}</td><td class="blunder">${bB}</td><td class="mistake">${bM}</td><td>${bG?(bB/bG).toFixed(1):'—'}</td></tr>
+      </tbody>
+    </table>`;
+}
+
+// ─── Games tab ────────────────────────────────────────────────────────────────
+function renderGamesTab(games) {
   document.getElementById('games-empty').style.display = 'none';
   document.getElementById('games-content').style.display = 'block';
-
-  const sorted = [...games].sort((a, b) => b.end_time - a.end_time);
-
-  const analysis = uuid => state.analysisResults[uuid];
-
+  const sorted = [...games].sort((a,b) => b.end_time - a.end_time);
   document.getElementById('games-table').innerHTML = `
-    <thead><tr><th>Date</th><th>White</th><th>Black</th><th>Result</th><th>Time Control</th><th>Blunders</th><th>View</th></tr></thead>
+    <thead><tr><th>Date</th><th>White</th><th>Black</th><th>Result</th><th>Time</th><th>Blunders</th><th></th></tr></thead>
     <tbody>${sorted.map(g => {
-      const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
-      const result = isWhite ? g.white?.result : g.black?.result;
-      const outcome = result === 'win' ? 'win' : ['checkmated','resigned','timeout','abandoned'].includes(result) ? 'loss' : 'draw';
-      const an = analysis(g.uuid);
+      const iw = isPlayerWhite(g);
+      const outcome = gameOutcome(g);
+      const an = state.analysisResults[g.uuid];
       return `<tr>
-        <td>${formatDate(g.end_time)}</td>
-        <td style="${!isWhite ? 'color:var(--text-muted)' : ''}">${g.white?.username || '?'} <span style="color:var(--text-muted);font-size:11px">(${g.white?.rating || '?'})</span></td>
-        <td style="${isWhite ? 'color:var(--text-muted)' : ''}">${g.black?.username || '?'} <span style="color:var(--text-muted);font-size:11px">(${g.black?.rating || '?'})</span></td>
+        <td>${fmtDate(g.end_time)}</td>
+        <td style="${!iw?'color:var(--text-muted)':''}">${g.white?.username||'?'} <span style="color:var(--text-muted);font-size:11px">(${g.white?.rating||'?'})</span></td>
+        <td style="${iw?'color:var(--text-muted)':''}">${g.black?.username||'?'} <span style="color:var(--text-muted);font-size:11px">(${g.black?.rating||'?'})</span></td>
         <td><span class="badge badge-${outcome}">${outcome}</span></td>
-        <td style="color:var(--text-muted)">${g.time_control || g.time_class || '?'}</td>
-        <td>${an ? `<span class="blunder">${an.blunders}B</span> <span class="mistake">${an.mistakes}M</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="color:var(--text-muted)">${g.time_class||g.time_control||'?'}</td>
+        <td>${an?`<span class="blunder">${an.blunders}B</span> <span class="mistake">${an.mistakes}M</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
         <td><button class="btn btn-sm" onclick="openGameInBoard('${g.uuid}')">View</button></td>
       </tr>`;
     }).join('')}</tbody>`;
 }
 
-// ─── Board ────────────────────────────────────────────────────────────────────
-const PIECES = {
-  K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙',
-  k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟',
-};
+// ─── Board rendering ──────────────────────────────────────────────────────────
+const PIECES = { K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙', k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟' };
 
 function fenToBoard(fen) {
-  const rows = fen.split(' ')[0].split('/');
-  const board = [];
-  for (const row of rows) {
+  return fen.split(' ')[0].split('/').map(row => {
     const r = [];
-    for (const c of row) {
-      if (isNaN(c)) r.push(c);
-      else for (let i = 0; i < parseInt(c); i++) r.push(null);
-    }
-    board.push(r);
-  }
-  return board;
+    for (const c of row) isNaN(c) ? r.push(c) : r.push(...Array(parseInt(c)).fill(null));
+    return r;
+  });
 }
 
 function renderBoard(fen, highlightSq = null, bestMove = null) {
   const board = fenToBoard(fen);
-  const container = document.getElementById('chess-board');
+  const flipped = state.boardFlipped;
   let html = '';
-
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
-      const isLight = (row + col) % 2 === 0;
-      const piece = board[row][col];
-      const sq = String.fromCharCode(97 + col) + (8 - row);
-      const isHighlight = highlightSq && (sq === highlightSq.slice(0, 2) || sq === highlightSq.slice(2, 4));
-      const isBest = bestMove && (sq === bestMove.slice(0, 2) || sq === bestMove.slice(2, 4));
-      const cls = `sq ${isLight ? 'light' : 'dark'}${isHighlight ? ' highlight' : ''}${isBest ? ' best-move' : ''}`;
-      const pieceClass = piece ? (piece === piece.toUpperCase() ? 'piece piece-w' : 'piece piece-b') : '';
-      html += `<div class="${cls}" data-sq="${sq}">${piece ? `<span class="${pieceClass}">${PIECES[piece] || piece}</span>` : ''}</div>`;
+      const br = flipped ? 7-row : row;
+      const bc = flipped ? 7-col : col;
+      const piece = board[br][bc];
+      const sq = String.fromCharCode(97+bc) + (8-br);
+      const isLight = (br+bc) % 2 === 0;
+      const isHL  = highlightSq && (sq === highlightSq.slice(0,2) || sq === highlightSq.slice(2,4));
+      const isBest = bestMove   && (sq === bestMove.slice(0,2)    || sq === bestMove.slice(2,4));
+      const cls = `sq ${isLight?'light':'dark'}${isHL?' highlight':''}${isBest?' best-move':''}`;
+      const pc = piece ? (piece === piece.toUpperCase() ? 'piece piece-w' : 'piece piece-b') : '';
+      html += `<div class="${cls}">${piece?`<span class="${pc}">${PIECES[piece]}</span>`:''}</div>`;
     }
   }
-  container.innerHTML = html;
+  document.getElementById('chess-board').innerHTML = html;
 }
 
 function openGameInBoard(uuid) {
   const game = state.games.find(g => g.uuid === uuid);
   if (!game) return;
-
-  // Switch to games tab
   switchTab('games');
 
   state.currentGame = game;
   state.currentMoves = parseGameMoves(game.pgn);
   state.currentMoveIndex = 0;
+  state.boardFlipped = !isPlayerWhite(game); // flip to player's perspective
 
-  const analysis = state.analysisResults[uuid];
-  const blunderIdxSet = new Set((analysis?.blunderMoves || []).filter(m => !m.isMistake).map(m => m.moveIndex));
-  const mistakeIdxSet = new Set((analysis?.blunderMoves || []).filter(m => m.isMistake).map(m => m.moveIndex));
+  const an = state.analysisResults[uuid];
+  const blunderSet = new Set((an?.blunderMoves||[]).filter(m=>!m.isMistake).map(m=>m.moveIndex));
+  const mistakeSet = new Set((an?.blunderMoves||[]).filter(m=> m.isMistake).map(m=>m.moveIndex));
 
-  // Move list
-  const moveList = document.getElementById('move-list');
   let mlHtml = '';
   for (let i = 1; i < state.currentMoves.length; i++) {
     const m = state.currentMoves[i];
-    const isBlunder = blunderIdxSet.has(i - 1);
-    const isMistake = mistakeIdxSet.has(i - 1);
-    if (i % 2 === 1) mlHtml += `<div class="move-row"><span class="move-num">${Math.ceil(i/2)}.</span>`;
-    mlHtml += `<span class="move-token${isBlunder ? ' blunder-move' : isMistake ? ' mistake-move' : ''}" data-idx="${i}" onclick="gotoMove(${i})">${m.san}${isBlunder ? '??' : isMistake ? '?' : ''}</span>`;
-    if (i % 2 === 0) mlHtml += '</div>';
+    const isB = blunderSet.has(i-1), isM = mistakeSet.has(i-1);
+    if (i%2===1) mlHtml += `<div class="move-row"><span class="move-num">${Math.ceil(i/2)}.</span>`;
+    mlHtml += `<span class="move-token${isB?' blunder-move':isM?' mistake-move':''}" data-idx="${i}" onclick="gotoMove(${i})">${m.san}${isB?'??':isM?'?':''}</span>`;
+    if (i%2===0) mlHtml += '</div>';
   }
-  moveList.innerHTML = mlHtml;
+  document.getElementById('move-list').innerHTML = mlHtml;
 
   renderBoard(state.currentMoves[0].fen);
   updateBoardInfo();
@@ -1112,41 +1064,32 @@ function openGameInBoard(uuid) {
 function gotoMove(idx) {
   if (!state.currentMoves || idx < 0 || idx >= state.currentMoves.length) return;
   state.currentMoveIndex = idx;
-  const pos = state.currentMoves[idx];
-
-  // Find blunder info for this move
-  const analysis = state.currentGame ? state.analysisResults[state.currentGame.uuid] : null;
-  const blunderInfo = analysis?.blunderMoves?.find(m => m.moveIndex === idx - 1);
-
-  renderBoard(pos.fen, null, blunderInfo?.bestMove);
-
-  // Highlight active move
+  const an = state.currentGame ? state.analysisResults[state.currentGame.uuid] : null;
+  const bi = an?.blunderMoves?.find(m => m.moveIndex === idx-1);
+  renderBoard(state.currentMoves[idx].fen, null, bi?.bestMove);
   document.querySelectorAll('.move-token').forEach(el => el.classList.remove('active'));
-  const active = document.querySelector(`.move-token[data-idx="${idx}"]`);
-  if (active) { active.classList.add('active'); active.scrollIntoView({ block: 'nearest' }); }
-
-  updateBoardInfo(blunderInfo);
+  const tok = document.querySelector(`.move-token[data-idx="${idx}"]`);
+  if (tok) { tok.classList.add('active'); tok.scrollIntoView({block:'nearest'}); }
+  updateBoardInfo(bi);
 }
 
-function updateBoardInfo(blunderInfo) {
+function updateBoardInfo(bi) {
   const el = document.getElementById('board-info');
   if (!state.currentGame) return;
-  const idx = state.currentMoveIndex;
-  const pos = state.currentMoves?.[idx];
+  const pos = state.currentMoves?.[state.currentMoveIndex];
   if (!pos) return;
-
-  let info = `Move ${Math.ceil(idx / 2)} — FEN: <span style="font-size:10px;font-family:monospace">${pos.fen.split(' ')[0]}</span>`;
-  if (blunderInfo) {
-    info += `<br><span class="${blunderInfo.isMistake ? 'mistake' : 'blunder'}">${blunderInfo.isMistake ? 'Mistake' : 'Blunder'}</span> — eval swing ${blunderInfo.swing}cp`;
-    if (blunderInfo.bestMove) info += ` — best: <strong>${blunderInfo.bestMove}</strong>`;
+  let info = `Move ${Math.ceil(state.currentMoveIndex/2)}`;
+  if (bi) {
+    info += ` — <span class="${bi.isMistake?'mistake':'blunder'}">${bi.isMistake?'Mistake':'Blunder'}</span> (${bi.swing}cp swing)`;
+    if (bi.bestMove) info += ` — best: <strong>${bi.bestMove}</strong>`;
   }
   el.innerHTML = info;
 }
 
 document.getElementById('btn-start').onclick = () => gotoMove(0);
-document.getElementById('btn-prev').onclick = () => gotoMove(Math.max(0, state.currentMoveIndex - 1));
-document.getElementById('btn-next').onclick = () => gotoMove(Math.min((state.currentMoves?.length || 1) - 1, state.currentMoveIndex + 1));
-document.getElementById('btn-end').onclick = () => gotoMove((state.currentMoves?.length || 1) - 1);
+document.getElementById('btn-prev').onclick  = () => gotoMove(Math.max(0, state.currentMoveIndex-1));
+document.getElementById('btn-next').onclick  = () => gotoMove(Math.min((state.currentMoves?.length||1)-1, state.currentMoveIndex+1));
+document.getElementById('btn-end').onclick   = () => gotoMove((state.currentMoves?.length||1)-1);
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 function switchTab(name) {
@@ -1155,118 +1098,81 @@ function switchTab(name) {
   document.getElementById(`tab-${name}`)?.classList.add('active');
   document.querySelector(`nav button[data-tab="${name}"]`)?.classList.add('active');
 }
-
-document.querySelectorAll('nav button').forEach(btn => {
-  btn.onclick = () => switchTab(btn.dataset.tab);
-});
+document.querySelectorAll('nav button').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
 
 // ─── Load games ───────────────────────────────────────────────────────────────
 document.getElementById('load-btn').onclick = async () => {
   const username = document.getElementById('username-input').value.trim();
   if (!username) return;
-
   const btn = document.getElementById('load-btn');
-  btn.disabled = true;
-  btn.textContent = 'Loading…';
-
+  btn.disabled = true; btn.textContent = 'Loading…';
   try {
-    const tc = document.getElementById('time-control-select').value;
-    const from = document.getElementById('date-from').value;
-    const to = document.getElementById('date-to').value;
-
+    state.username = username;
     document.getElementById('username-display').textContent = `— ${username}`;
-    state.games = await fetchAllGames(username, tc, from, to);
-
-    if (!state.games.length) {
-      alert('No games found for those filters.');
-      return;
-    }
-
-    renderOverview(state.games, username);
-    renderOpenings(state.games, username);
-    renderGamesTab(state.games, username);
-    renderBlunders(state.games, username);
-
-    // Start analysis in background
-    startAnalysis(username);
-  } catch (e) {
-    alert('Error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Load Games';
-  }
+    state.games = await fetchAllGames(
+      username,
+      document.getElementById('time-control-select').value,
+      document.getElementById('date-from').value,
+      document.getElementById('date-to').value
+    );
+    if (!state.games.length) { alert('No games found for those filters.'); return; }
+    renderOverview(state.games);
+    renderOpenings(state.games);
+    renderGamesTab(state.games);
+    renderBlunders(state.games);
+    startAnalysis();
+  } catch(e) { alert('Error: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Load Games'; }
 };
 
-// ─── Analysis queue ───────────────────────────────────────────────────────────
-async function startAnalysis(username) {
+// ─── Analysis ─────────────────────────────────────────────────────────────────
+async function startAnalysis() {
   if (state.analysing) return;
   state.analysing = true;
-
-  // Init stockfish if needed
   if (!state.sfReady) {
-    document.getElementById('progress-text').textContent = 'Loading Stockfish WASM…';
+    document.getElementById('progress-text').textContent = 'Loading Stockfish…';
     document.getElementById('analysis-bar').classList.add('visible');
-    try {
-      await initStockfish();
-    } catch (e) {
+    try { await initStockfish(); }
+    catch(e) {
       document.getElementById('progress-text').textContent = 'Stockfish failed to load — analysis unavailable';
-      state.analysing = false;
-      return;
+      state.analysing = false; return;
     }
   }
-
-  const toAnalyse = state.games.filter(g => !state.analysisResults[g.uuid]);
-  const total = toAnalyse.length;
-
-  if (!total) {
+  const queue = state.games.filter(g => !state.analysisResults[g.uuid]);
+  if (!queue.length) {
     document.getElementById('analysis-bar').classList.remove('visible');
     state.analysing = false;
-    renderBlunders(state.games, username);
-    renderPhaseDistribution(state.games, username);
-    renderBlunderTrend(state.games, username);
+    renderBlunders(state.games); renderPhaseDistribution(); renderBlunderTrend(state.games);
     return;
   }
-
   document.getElementById('analysis-bar').classList.add('visible');
   let done = 0;
-
-  for (const game of toAnalyse) {
-    document.getElementById('progress-text').textContent = `Analysing game ${done + 1} of ${total}…`;
-    document.getElementById('analysis-status').textContent = `vs ${(game.white?.username || '').toLowerCase() === username.toLowerCase() ? game.black?.username : game.white?.username}`;
-    const pct = Math.round(done / total * 100);
-    document.getElementById('progress-fill').style.width = pct + '%';
-    document.getElementById('progress-pct').textContent = pct + '%';
-
-    const result = await analyseGame(game, username);
-    if (result) state.analysisResults[game.uuid] = result;
+  for (const game of queue) {
+    const opp = isPlayerWhite(game) ? game.black?.username : game.white?.username;
+    document.getElementById('progress-text').textContent = `Analysing ${done+1} of ${queue.length}…`;
+    document.getElementById('analysis-status').textContent = `vs ${opp}`;
+    document.getElementById('progress-fill').style.width = (done/queue.length*100)+'%';
+    document.getElementById('progress-pct').textContent  = Math.round(done/queue.length*100)+'%';
+    const r = await analyseGame(game, state.username);
+    if (r) state.analysisResults[game.uuid] = r;
     done++;
-
-    // Update displays incrementally
-    if (done % 5 === 0 || done === total) {
-      renderBlunders(state.games, username);
-      renderPhaseDistribution(state.games, username);
-      renderBlunderTrend(state.games, username);
+    if (done%5===0 || done===queue.length) {
+      renderBlunders(state.games); renderPhaseDistribution(); renderBlunderTrend(state.games);
     }
   }
-
   document.getElementById('progress-fill').style.width = '100%';
-  document.getElementById('progress-pct').textContent = '100%';
-  document.getElementById('progress-text').textContent = `Analysis complete — ${total} games`;
+  document.getElementById('progress-pct').textContent  = '100%';
+  document.getElementById('progress-text').textContent = `Analysis complete — ${queue.length} games`;
   document.getElementById('analysis-status').textContent = '';
   setTimeout(() => document.getElementById('analysis-bar').classList.remove('visible'), 3000);
-
-  renderBlunders(state.games, username);
-  renderPhaseDistribution(state.games, username);
-  renderBlunderTrend(state.games, username);
-  renderGamesTab(state.games, username);
+  renderBlunders(state.games); renderPhaseDistribution(); renderBlunderTrend(state.games); renderGamesTab(state.games);
   state.analysing = false;
 }
 
-// ─── Init ────────────────────────────────────────────────────────────────────
-// Set default date range: last 90 days
-const now = new Date();
-const past = new Date(now - 90 * 24 * 60 * 60 * 1000);
-document.getElementById('date-to').value = now.toISOString().split('T')[0];
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadSettings();
+const now = new Date(), past = new Date(now - 90*24*60*60*1000);
+document.getElementById('date-to').value   = now.toISOString().split('T')[0];
 document.getElementById('date-from').value = past.toISOString().split('T')[0];
 </script>
 </body>
