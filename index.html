@@ -346,6 +346,32 @@ function evaluatePosition(fen, depth = 14) {
 }
 
 // ─── Chess.com API ───────────────────────────────────────────────────────────
+function isCurrentMonth(url) {
+  const parts = url.split('/');
+  const y = parseInt(parts[parts.length - 2]);
+  const m = parseInt(parts[parts.length - 1]);
+  const now = new Date();
+  return y === now.getFullYear() && m === (now.getMonth() + 1);
+}
+
+async function fetchArchive(url) {
+  // Never cache the current month — new games are still being added
+  const cacheKey = `chess_archive_${url}`;
+  if (!isCurrentMonth(url)) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch {}
+    }
+  }
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const { games } = await res.json();
+  if (!isCurrentMonth(url)) {
+    try { localStorage.setItem(cacheKey, JSON.stringify(games)); } catch {}
+  }
+  return games;
+}
+
 async function fetchAllGames(username, timeControl, dateFrom, dateTo) {
   const archivesRes = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
   if (!archivesRes.ok) throw new Error('Player not found');
@@ -367,9 +393,7 @@ async function fetchAllGames(username, timeControl, dateFrom, dateTo) {
 
   let allGames = [];
   for (const url of filtered) {
-    const res = await fetch(url);
-    if (!res.ok) continue;
-    const { games } = await res.json();
+    const games = await fetchArchive(url);
     allGames = allGames.concat(games);
   }
 
