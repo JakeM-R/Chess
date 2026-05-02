@@ -668,7 +668,7 @@ function classifyMove(cploss, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v5_${game.uuid}`;
+  const key=`chess_analysis_v6_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
@@ -686,10 +686,12 @@ async function analyseGameV2(game, username){
   const moves=extractMoves(game.pgn);
   const bookDepth=getBookDepth(moves);
 
-  // Evaluate all positions sequentially
+  // Evaluate all positions sequentially — normalise all scores to white's perspective
+  // Stockfish reports from side-to-move's perspective, so odd positions need negation
   const evs=[];
   for(let i=0;i<positions.length;i++){
     const ev=await evaluatePosition(positions[i].fen, i<bookDepth?6:12);
+    if(ev && i%2!==0) ev.score=-(ev.score??0); // black to move → flip to white's POV
     evs.push(ev);
   }
 
@@ -711,9 +713,9 @@ async function analyseGameV2(game, username){
     const prevEv=evs[i-1], currEv=evs[i];
     if(!prevEv||!currEv) continue;
 
-    const clampCp=v=>Math.max(-1500,Math.min(1500,v??0));
-    const evalBefore=clampCp(prevEv.score);
-    const evalAfter=clampCp(currEv.score);
+    const clamp=v=>Math.max(-1500,Math.min(1500,v??0));
+    const evalBefore=clamp(prevEv.score); // white's perspective
+    const evalAfter =clamp(currEv.score); // white's perspective
     const playerPrev=isWhite?evalBefore:-evalBefore;
     const playerCurr=isWhite?evalAfter :-evalAfter;
     const cploss=Math.max(0,playerPrev-playerCurr);
