@@ -3,195 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chess Analytics Dashboard</title>
+<title>Chess Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #252836;
-    --border: #2e3248;
-    --accent: #7c6af7;
-    --text: #e2e8f0;
-    --text-muted: #6b7280;
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #f59e0b;
-    --blue: #3b82f6;
-    --sq-light: #f0d9b5;
-    --sq-dark: #b58863;
+    --bg:#0f1117; --surface:#1a1d27; --surface2:#252836; --border:#2e3248;
+    --accent:#7c6af7; --text:#e2e8f0; --text-muted:#6b7280;
+    --green:#22c55e; --red:#ef4444; --yellow:#f59e0b; --blue:#3b82f6;
+    --sq-light:#f0d9b5; --sq-dark:#b58863;
+    --mv-book:#6b7280; --mv-best:#22c55e; --mv-excellent:#86efac;
+    --mv-good:#60a5fa; --mv-inaccuracy:#f59e0b; --mv-mistake:#f97316; --mv-blunder:#ef4444;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
-  #app { display: flex; flex-direction: column; min-height: 100vh; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
+  #app{display:flex;flex-direction:column;min-height:100vh}
 
-  /* ── Header ── */
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
-  header h1 { font-size: 20px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-  header h1 span { color: var(--text-muted); font-weight: 400; font-size: 14px; margin-left: 8px; }
-  .header-controls { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; }
-  .header-controls input, .header-controls select {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    padding: 6px 10px; border-radius: 6px; font-size: 13px;
-  }
-  .header-controls input[type="text"] { width: 140px; }
-  .header-controls input[type="date"] { width: 136px; }
-  .btn { background: var(--accent); color: #fff; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; white-space: nowrap; }
-  .btn:hover { opacity: .85; }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-sm { padding: 4px 10px; font-size: 12px; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-  .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); opacity: 1; }
-  .btn-icon { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 16px; transition: color .15s; }
-  .btn-icon:hover { color: var(--text); }
+  /* Header */
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px}
+  header h1{font-size:20px;font-weight:700;color:var(--accent);white-space:nowrap}
+  header h1 span{color:var(--text-muted);font-weight:400;font-size:14px;margin-left:8px}
+  .hc{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
+  .hc input,.hc select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px}
+  .hc input[type="text"]{width:140px}.hc input[type="date"]{width:136px}
+  .btn{background:var(--accent);color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;transition:opacity .15s;white-space:nowrap}
+  .btn:hover{opacity:.85}.btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn-sm{padding:4px 10px;font-size:12px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-muted);opacity:1}
+  .btn-icon{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:7px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1}
+  .btn-icon:hover{color:var(--text)}
 
-  /* ── Nav ── */
-  nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; }
-  nav button { background: none; border: none; color: var(--text-muted); padding: 12px 16px; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all .15s; }
-  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
-  nav button:hover:not(.active) { color: var(--text); }
+  /* Nav */
+  nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px}
+  nav button{background:none;border:none;color:var(--text-muted);padding:12px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:2px solid transparent;transition:all .15s}
+  nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+  nav button:hover:not(.active){color:var(--text)}
 
-  /* ── Main / Panels ── */
-  main { flex: 1; padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
+  /* Layout */
+  main{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto}
+  .tab-panel{display:none}.tab-panel.active{display:block}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+  .card-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px}
+  .stat-card .val{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+  .stat-card .lbl{font-size:12px;color:var(--text-muted)}
+  .stat-card .sub{font-size:12px;color:var(--text-muted);margin-top:4px}
 
-  /* ── Cards ── */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-  .card-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+  /* Progress */
+  #analysis-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:none}
+  #analysis-bar.visible{display:block}
+  .progress-track{background:var(--surface2);border-radius:999px;height:8px;overflow:hidden;margin-top:8px}
+  .progress-fill{background:var(--accent);height:100%;border-radius:999px;transition:width .3s;width:0%}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-top:6px}
 
-  /* ── Grids ── */
-  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  /* Charts */
+  #rating-chart{width:100%;height:220px}
+  #accuracy-chart{width:100%;height:180px}
 
-  /* ── Stat cards ── */
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
-  .stat-card .value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-  .stat-card .label { font-size: 12px; color: var(--text-muted); }
-  .stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+  td{padding:9px 12px;border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--surface2)}
 
-  /* ── Progress bar ── */
-  #analysis-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: none; }
-  #analysis-bar.visible { display: block; }
-  .progress-track { background: var(--surface2); border-radius: 999px; height: 8px; overflow: hidden; margin-top: 8px; }
-  .progress-fill { background: var(--accent); height: 100%; border-radius: 999px; transition: width .3s; width: 0%; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  /* W/D/L */
+  .wl-bar{display:flex;height:6px;border-radius:999px;overflow:hidden;min-width:80px}
+  .wl-bar .w{background:var(--green)}.wl-bar .d{background:var(--yellow)}.wl-bar .l{background:var(--red)}
 
-  /* ── Charts ── */
-  #rating-chart { width: 100%; height: 220px; }
+  /* Badges */
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+  .badge-w{background:#ffffff22;color:#fff}
+  .badge-b{background:#00000044;color:var(--text-muted);border:1px solid var(--border)}
+  .badge-win{background:#22c55e22;color:var(--green)}
+  .badge-loss{background:#ef444422;color:var(--red)}
+  .badge-draw{background:#f59e0b22;color:var(--yellow)}
 
-  /* ── Tables ── */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 12px; color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
-  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
+  /* Move classification colours */
+  .mv-book{color:var(--mv-book)}
+  .mv-best{color:var(--mv-best);font-weight:600}
+  .mv-excellent{color:var(--mv-excellent)}
+  .mv-good{color:var(--mv-good)}
+  .mv-inaccuracy{color:var(--mv-inaccuracy)}
+  .mv-mistake{color:var(--mv-mistake)}
+  .mv-blunder{color:var(--mv-blunder);font-weight:700}
 
-  /* ── W/D/L bar ── */
-  .wl-bar { display: flex; height: 6px; border-radius: 999px; overflow: hidden; min-width: 80px; }
-  .wl-bar .w { background: var(--green); }
-  .wl-bar .d { background: var(--yellow); }
-  .wl-bar .l { background: var(--red); }
+  /* Classification stacked bar */
+  .cls-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;gap:1px;margin:8px 0}
+  .cls-seg{min-width:2px}
 
-  /* ── Badges ── */
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-  .badge-w { background: #ffffff22; color: #fff; }
-  .badge-b { background: #00000044; color: var(--text-muted); border: 1px solid var(--border); }
-  .badge-win { background: #22c55e22; color: var(--green); }
-  .badge-loss { background: #ef444422; color: var(--red); }
-  .badge-draw { background: #f59e0b22; color: var(--yellow); }
+  /* Board area */
+  .board-area{display:flex;gap:8px;align-items:flex-start}
+  .eval-bar-wrap{width:18px;height:400px;display:flex;flex-direction:column;border-radius:4px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
+  .eval-bar-black{background:#2a2a3a;transition:flex .4s}
+  .eval-bar-white{background:#e8e8e8;transition:flex .4s}
+  .eval-label{font-size:10px;text-align:center;margin-top:3px;color:var(--text-muted);font-weight:600;min-height:14px}
+  .board-wrap{display:flex;flex-direction:column;gap:8px}
+  .board-panel{display:grid;grid-template-columns:440px 1fr;gap:20px}
+  .board-grid{display:grid;grid-template-columns:repeat(8,50px);grid-template-rows:repeat(8,50px);width:400px;height:400px;border:2px solid var(--border);border-radius:4px;overflow:hidden}
+  .sq{width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;transition:background .1s}
+  .sq.light{background:var(--sq-light)}.sq.dark{background:var(--sq-dark)}
+  .sq.highlight{background:#f6f66980!important}.sq.best-move{background:#15781b99!important}
+  .piece{user-select:none;line-height:1}
+  .piece-w{color:#fff;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000}
+  .piece-b{color:#111;text-shadow:0 0 3px #88888866}
+  .board-controls{display:flex;gap:8px}
+  .board-info{background:var(--surface2);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text-muted);min-height:32px}
 
-  /* ── Annotation colours ── */
-  .blunder { color: var(--red); font-weight: 700; }
-  .mistake { color: var(--yellow); font-weight: 600; }
+  /* Report card */
+  #report-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:12px;display:none}
+  #report-card.visible{display:block}
+  .rc-row{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .rc-acc{text-align:center;min-width:64px}
+  .rc-acc .rc-val{font-size:26px;font-weight:700}
+  .rc-acc .rc-sub{font-size:11px;color:var(--text-muted)}
+  .rc-divider{width:1px;height:40px;background:var(--border)}
+  .rc-stat{text-align:center}
+  .rc-stat .rv{font-size:18px;font-weight:600}
+  .rc-stat .rl{font-size:11px;color:var(--text-muted)}
+  .rc-moves{flex:1;min-width:200px}
+  .rc-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .rc-leg-item{font-size:11px;display:flex;align-items:center;gap:3px}
+  .rc-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 
-  /* ── Board ── */
-  .board-panel { display: grid; grid-template-columns: 420px 1fr; gap: 20px; }
-  .board-wrap { display: flex; flex-direction: column; gap: 8px; }
-  .board-grid { display: grid; grid-template-columns: repeat(8, 50px); grid-template-rows: repeat(8, 50px); width: 400px; height: 400px; border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
-  .sq { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 38px; cursor: pointer; transition: background .1s; }
-  .sq.light { background: var(--sq-light); }
-  .sq.dark { background: var(--sq-dark); }
-  .sq.highlight { background: #f6f66988 !important; }
-  .sq.best-move { background: #15781b99 !important; }
-  .piece { user-select: none; line-height: 1; }
-  .piece-w { color: #fff; text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; }
-  .piece-b { color: #111; text-shadow: 0 0 3px #88888866; }
-  .board-controls { display: flex; gap: 8px; }
-  .board-info { background: var(--surface2); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--text-muted); min-height: 36px; }
+  /* Move list */
+  .move-list{max-height:320px;overflow-y:auto;font-size:13px}
+  .move-row{display:flex;align-items:center;gap:2px;padding:2px 4px;border-radius:4px}
+  .move-row:hover{background:var(--surface2)}
+  .move-num{color:var(--text-muted);min-width:28px;font-size:12px}
+  .move-token{padding:2px 5px;border-radius:3px;cursor:pointer;font-family:monospace;transition:background .1s}
+  .move-token:hover{background:var(--border)}
+  .move-token.active{background:var(--accent);color:#fff!important}
 
-  /* ── Move list ── */
-  .move-list { max-height: 340px; overflow-y: auto; font-size: 13px; }
-  .move-row { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 4px; }
-  .move-row:hover { background: var(--surface2); }
-  .move-num { color: var(--text-muted); min-width: 28px; }
-  .move-token { padding: 2px 6px; border-radius: 3px; cursor: pointer; font-family: monospace; }
-  .move-token:hover { background: var(--border); }
-  .move-token.active { background: var(--accent); color: #fff; }
-  .move-token.blunder-move { color: var(--red); }
-  .move-token.mistake-move { color: var(--yellow); }
+  /* Openings */
+  .opening-row{cursor:pointer}
+  .opening-row td:first-child{color:var(--accent)}
+  .opening-row td:first-child::before{content:'▶ ';font-size:10px;opacity:.6}
+  #opening-detail{display:none}
+  #opening-detail.active{display:block}
+  .detail-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+  .detail-header h2{font-size:20px;font-weight:700}
 
-  /* ── Empty / spinner ── */
-  .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-  .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .3; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* Analysis tab */
+  .skill-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  .skill-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px}
+  .skill-card .sk-val{font-size:32px;font-weight:700;line-height:1}
+  .skill-card .sk-lbl{font-size:12px;color:var(--text-muted);margin-top:4px}
+  .skill-card .sk-bar{height:4px;background:var(--surface2);border-radius:999px;margin-top:10px;overflow:hidden}
+  .skill-card .sk-fill{height:100%;border-radius:999px;background:var(--accent)}
 
-  /* ── Phase bar ── */
-  .phase-bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; gap: 2px; margin-top: 8px; }
-  .phase-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; min-width: 24px; }
+  /* Empty */
+  .empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+  .empty svg{width:48px;height:48px;margin-bottom:12px;opacity:.3}
 
-  /* ── Openings clickable row ── */
-  .opening-row { cursor: pointer; }
-  .opening-row td:first-child { color: var(--accent); }
-  .opening-row:hover td { background: var(--surface2); }
-  .opening-row td:first-child::before { content: '▶ '; font-size: 10px; opacity: .6; }
+  /* Phase bar */
+  .phase-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;gap:2px;margin-top:8px}
+  .phase-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;min-width:24px}
 
-  /* ── Opening detail view ── */
-  #opening-detail { display: none; }
-  #opening-detail.active { display: block; }
-  .detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-  .detail-header h2 { font-size: 20px; font-weight: 700; }
+  /* Settings modal */
+  .modal-backdrop{display:none;position:fixed;inset:0;background:#00000088;z-index:100;align-items:center;justify-content:center}
+  .modal-backdrop.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:460px;max-width:95vw}
+  .modal h2{font-size:17px;font-weight:700;margin-bottom:20px}
+  .modal-close{float:right;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;margin-top:-4px}
+  .modal-close:hover{color:var(--text)}
+  .setting-group{margin-bottom:20px}
+  .setting-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+  .swatch-row{display:flex;gap:10px;flex-wrap:wrap}
+  .swatch{width:36px;height:36px;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:border-color .15s}
+  .swatch.active{border-color:#fff}
+  .board-swatch{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:8px;border:2px solid transparent;transition:all .15s}
+  .board-swatch.active{border-color:var(--accent)}
+  .board-swatch:hover{background:var(--surface2)}
+  .board-mini{display:grid;grid-template-columns:repeat(4,14px);grid-template-rows:repeat(4,14px);border-radius:3px;overflow:hidden}
+  .board-mini-sq{width:14px;height:14px}
 
-  /* ── Settings modal ── */
-  .modal-backdrop { display: none; position: fixed; inset: 0; background: #00000088; z-index: 100; align-items: center; justify-content: center; }
-  .modal-backdrop.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; width: 460px; max-width: 95vw; }
-  .modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
-  .modal-close { float: right; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1; margin-top: -4px; }
-  .modal-close:hover { color: var(--text); }
-  .setting-group { margin-bottom: 20px; }
-  .setting-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
-  .swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .swatch { width: 36px; height: 36px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; transition: border-color .15s; }
-  .swatch.active { border-color: #fff; }
-  .board-swatch { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 12px; border-radius: 8px; border: 2px solid transparent; transition: border-color .15s; }
-  .board-swatch.active { border-color: var(--accent); }
-  .board-swatch:hover { background: var(--surface2); }
-  .board-mini { display: grid; grid-template-columns: repeat(4, 14px); grid-template-rows: repeat(4, 14px); border-radius: 3px; overflow: hidden; }
-  .board-mini-sq { width: 14px; height: 14px; }
-
-  /* ── Scrollbars ── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
 </style>
 </head>
 <body>
 <div id="app">
-
   <header>
     <h1>Chess Analytics <span id="username-display"></span></h1>
-    <div class="header-controls">
+    <div class="hc">
       <input type="text" id="username-input" placeholder="Username" value="jakem-r">
-      <select id="time-control-select">
-        <option value="rapid">Rapid</option>
-        <option value="blitz">Blitz</option>
-        <option value="bullet">Bullet</option>
-        <option value="all">All</option>
+      <select id="tc-select">
+        <option value="rapid">Rapid</option><option value="blitz">Blitz</option>
+        <option value="bullet">Bullet</option><option value="all">All</option>
       </select>
-      <input type="date" id="date-from">
-      <input type="date" id="date-to">
+      <input type="date" id="date-from"><input type="date" id="date-to">
       <button class="btn" id="load-btn">Load Games</button>
       <button class="btn-icon" id="settings-btn" title="Settings">⚙</button>
     </div>
@@ -200,7 +205,7 @@
   <nav>
     <button class="active" data-tab="overview">Overview</button>
     <button data-tab="openings">Openings</button>
-    <button data-tab="blunders">Blunders</button>
+    <button data-tab="analysis">Analysis</button>
     <button data-tab="games">Games</button>
   </nav>
 
@@ -211,7 +216,7 @@
         <span id="analysis-status" style="font-size:12px;color:var(--text-muted)"></span>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-      <div class="progress-label"><span id="progress-text">Initialising...</span><span id="progress-pct">0%</span></div>
+      <div class="progress-label"><span id="progress-text">Initialising…</span><span id="progress-pct">0%</span></div>
     </div>
 
     <!-- OVERVIEW -->
@@ -227,56 +232,56 @@
           <div class="card"><div class="card-title">Results Breakdown</div><canvas id="results-chart" height="200"></canvas></div>
         </div>
         <div class="grid-2">
-          <div class="card"><div class="card-title">Blunder Rate Trend</div><svg id="blunder-trend-chart" width="100%" height="200"></svg></div>
-          <div class="card"><div class="card-title">Game Phase Loss Distribution</div><div id="phase-display"></div></div>
+          <div class="card"><div class="card-title">Accuracy Over Time</div><svg id="accuracy-chart"></svg></div>
+          <div class="card"><div class="card-title">Game Phase Loss</div><div id="phase-display"></div></div>
         </div>
       </div>
     </div>
 
     <!-- OPENINGS -->
     <div class="tab-panel" id="tab-openings">
-      <!-- List view -->
       <div id="openings-list">
         <div id="openings-empty" class="empty"><p>Load games to see opening analysis</p></div>
         <div id="openings-content" style="display:none">
           <div class="grid-2">
-            <div class="card">
-              <div class="card-title">As White — by frequency</div>
-              <div style="overflow-x:auto"><table id="openings-white-table"></table></div>
-            </div>
-            <div class="card">
-              <div class="card-title">As Black — by frequency</div>
-              <div style="overflow-x:auto"><table id="openings-black-table"></table></div>
-            </div>
+            <div class="card"><div class="card-title">As White — by frequency</div><div style="overflow-x:auto"><table id="openings-white-table"></table></div></div>
+            <div class="card"><div class="card-title">As Black — by frequency</div><div style="overflow-x:auto"><table id="openings-black-table"></table></div></div>
           </div>
         </div>
       </div>
-      <!-- Detail view -->
       <div id="opening-detail">
         <div class="detail-header">
-          <button class="btn btn-ghost btn-sm" onclick="closeOpeningDetail()">← Back to Openings</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeOpeningDetail()">← Back</button>
           <h2 id="opening-detail-title"></h2>
           <span id="opening-detail-badge" style="font-size:12px;color:var(--text-muted)"></span>
         </div>
-        <div class="card">
-          <table id="opening-detail-table"></table>
-        </div>
+        <div class="card"><table id="opening-detail-table"></table></div>
       </div>
     </div>
 
-    <!-- BLUNDERS -->
-    <div class="tab-panel" id="tab-blunders">
-      <div id="blunders-empty" class="empty"><p>Analysis runs after games load. Check back here once the progress bar completes.</p></div>
-      <div id="blunders-content" style="display:none">
-        <div class="grid-3" id="blunder-stats"></div>
+    <!-- ANALYSIS -->
+    <div class="tab-panel" id="tab-analysis">
+      <div id="analysis-empty" class="empty"><p>Analysis runs automatically after games load.</p></div>
+      <div id="analysis-content" style="display:none">
+        <div class="skill-grid" id="skill-cards"></div>
         <div class="grid-2">
           <div class="card">
-            <div class="card-title">Worst Games by Blunders</div>
-            <div style="overflow-x:auto"><table id="blunder-games-table"></table></div>
+            <div class="card-title">Move Quality Distribution</div>
+            <div id="cls-distribution"></div>
           </div>
           <div class="card">
-            <div class="card-title">Blunders by White vs Black</div>
-            <div id="blunder-color-breakdown"></div>
+            <div class="card-title">Accuracy by Colour</div>
+            <div id="accuracy-by-color"></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Worst Games</div>
+            <div style="overflow-x:auto"><table id="worst-games-table"></table></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Game Phase Loss</div>
+            <div id="phase-display-2"></div>
           </div>
         </div>
       </div>
@@ -286,9 +291,19 @@
     <div class="tab-panel" id="tab-games">
       <div id="games-empty" class="empty"><p>Load games to browse them</p></div>
       <div id="games-content" style="display:none">
+        <div id="report-card">
+          <div class="rc-row" id="rc-row"></div>
+        </div>
         <div class="board-panel">
           <div class="board-wrap">
-            <div class="board-grid" id="chess-board"></div>
+            <div class="board-area">
+              <div class="eval-bar-wrap" id="eval-bar">
+                <div class="eval-bar-black" id="eval-black" style="flex:50"></div>
+                <div class="eval-bar-white" id="eval-white" style="flex:50"></div>
+              </div>
+              <div class="board-grid" id="chess-board"></div>
+            </div>
+            <div class="eval-label" id="eval-label"></div>
             <div class="board-controls">
               <button class="btn btn-sm" id="btn-start">⏮</button>
               <button class="btn btn-sm" id="btn-prev">◀</button>
@@ -318,12 +333,10 @@
   <div class="modal">
     <button class="modal-close" onclick="closeSettings()">✕</button>
     <h2>Settings</h2>
-
     <div class="setting-group">
       <div class="setting-label">Site Accent Colour</div>
       <div class="swatch-row" id="accent-swatches"></div>
     </div>
-
     <div class="setting-group">
       <div class="setting-label">Board Style</div>
       <div id="board-style-options"></div>
@@ -334,194 +347,126 @@
 <script>
 // ─── Settings ─────────────────────────────────────────────────────────────────
 const ACCENT_THEMES = [
-  { name: 'Purple',  accent: '#7c6af7' },
-  { name: 'Blue',    accent: '#3b82f6' },
-  { name: 'Teal',    accent: '#14b8a6' },
-  { name: 'Emerald', accent: '#10b981' },
-  { name: 'Rose',    accent: '#f43f5e' },
-  { name: 'Amber',   accent: '#f59e0b' },
+  {name:'Purple', accent:'#7c6af7'},{name:'Blue',    accent:'#3b82f6'},
+  {name:'Teal',   accent:'#14b8a6'},{name:'Emerald', accent:'#10b981'},
+  {name:'Rose',   accent:'#f43f5e'},{name:'Amber',   accent:'#f59e0b'},
 ];
-
 const BOARD_STYLES = [
-  { name: 'Classic',  light: '#f0d9b5', dark: '#b58863' },
-  { name: 'Marine',   light: '#dee3e6', dark: '#8ca2ad' },
-  { name: 'Forest',   light: '#ffffdd', dark: '#86a666' },
-  { name: 'Walnut',   light: '#f0d9b5', dark: '#7a4a2c' },
-  { name: 'Night',    light: '#9a9a9a', dark: '#555577' },
+  {name:'Classic', light:'#f0d9b5', dark:'#b58863'},
+  {name:'Marine',  light:'#dee3e6', dark:'#8ca2ad'},
+  {name:'Forest',  light:'#ffffdd', dark:'#86a666'},
+  {name:'Walnut',  light:'#f0d9b5', dark:'#7a4a2c'},
+  {name:'Night',   light:'#9a9a9a', dark:'#555577'},
 ];
-
-let settings = { accentIdx: 0, boardIdx: 0 };
-
+let settings = {accentIdx:0, boardIdx:0};
 function loadSettings() {
-  try {
-    const s = JSON.parse(localStorage.getItem('chess_settings') || '{}');
-    if (s.accentIdx != null) settings.accentIdx = s.accentIdx;
-    if (s.boardIdx  != null) settings.boardIdx  = s.boardIdx;
-  } catch {}
+  try { const s=JSON.parse(localStorage.getItem('chess_settings')||'{}'); if(s.accentIdx!=null)settings.accentIdx=s.accentIdx; if(s.boardIdx!=null)settings.boardIdx=s.boardIdx; } catch{}
   applySettings();
 }
-
-function saveSettings() {
-  localStorage.setItem('chess_settings', JSON.stringify(settings));
-  applySettings();
-}
-
+function saveSettings() { localStorage.setItem('chess_settings',JSON.stringify(settings)); applySettings(); }
 function applySettings() {
-  const a = ACCENT_THEMES[settings.accentIdx];
-  const b = BOARD_STYLES[settings.boardIdx];
-  const root = document.documentElement.style;
-  root.setProperty('--accent', a.accent);
-  root.setProperty('--sq-light', b.light);
-  root.setProperty('--sq-dark',  b.dark);
-  // Re-render board if one is showing
-  if (state.currentMoves?.length) {
-    renderBoard(state.currentMoves[state.currentMoveIndex].fen, null,
-      state.currentGame ? state.analysisResults[state.currentGame.uuid]?.blunderMoves?.find(m => m.moveIndex === state.currentMoveIndex - 1)?.bestMove : null);
-  }
+  const a=ACCENT_THEMES[settings.accentIdx], b=BOARD_STYLES[settings.boardIdx];
+  const r=document.documentElement.style;
+  r.setProperty('--accent',a.accent); r.setProperty('--sq-light',b.light); r.setProperty('--sq-dark',b.dark);
+  if(state.currentMoves?.length) refreshBoard();
 }
-
 function buildSettingsUI() {
-  // Accent swatches
-  const sr = document.getElementById('accent-swatches');
-  sr.innerHTML = ACCENT_THEMES.map((t, i) => `
-    <div class="swatch${i === settings.accentIdx ? ' active' : ''}" title="${t.name}"
-      style="background:${t.accent}" onclick="pickAccent(${i})"></div>`).join('');
-
-  // Board style options
-  const br = document.getElementById('board-style-options');
-  br.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-    BOARD_STYLES.map((b, i) => `
-      <div class="board-swatch${i === settings.boardIdx ? ' active' : ''}" onclick="pickBoard(${i})">
-        <div class="board-mini">${[0,1,2,3].flatMap(r => [0,1,2,3].map(c =>
-          `<div class="board-mini-sq" style="background:${(r+c)%2===0 ? b.light : b.dark}"></div>`
-        )).join('')}</div>
-        <span style="font-size:12px">${b.name}</span>
-      </div>`).join('') + '</div>';
+  document.getElementById('accent-swatches').innerHTML = ACCENT_THEMES.map((t,i)=>
+    `<div class="swatch${i===settings.accentIdx?' active':''}" title="${t.name}" style="background:${t.accent}" onclick="pickAccent(${i})"></div>`).join('');
+  document.getElementById('board-style-options').innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    BOARD_STYLES.map((b,i)=>`<div class="board-swatch${i===settings.boardIdx?' active':''}" onclick="pickBoard(${i})">
+      <div class="board-mini">${[0,1,2,3].flatMap(r=>[0,1,2,3].map(c=>`<div class="board-mini-sq" style="background:${(r+c)%2===0?b.light:b.dark}"></div>`)).join('')}</div>
+      <span style="font-size:12px">${b.name}</span></div>`).join('')+'</div>';
 }
-
-function pickAccent(i) {
-  settings.accentIdx = i;
-  saveSettings();
-  buildSettingsUI();
-}
-
-function pickBoard(i) {
-  settings.boardIdx = i;
-  saveSettings();
-  buildSettingsUI();
-}
-
-function openSettings()  { buildSettingsUI(); document.getElementById('settings-modal').classList.add('open'); }
-function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
-
-document.getElementById('settings-btn').onclick = openSettings;
-document.getElementById('settings-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
+function pickAccent(i){settings.accentIdx=i;saveSettings();buildSettingsUI();}
+function pickBoard(i){settings.boardIdx=i;saveSettings();buildSettingsUI();}
+function openSettings(){buildSettingsUI();document.getElementById('settings-modal').classList.add('open');}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+document.getElementById('settings-btn').onclick=openSettings;
+document.getElementById('settings-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSettings();});
 
 // ─── State ────────────────────────────────────────────────────────────────────
 const state = {
-  games: [], username: '',
-  analysisResults: {},
-  analysing: false, stockfish: null, sfReady: false,
-  currentGame: null, currentMoveIndex: 0, currentMoves: [], boardFlipped: false,
+  games:[], username:'',
+  analysisResults:{},      // uuid → v2 result
+  analysing:false, stockfish:null, sfReady:false,
+  currentGame:null, currentMoveIndex:0, currentMoves:[], boardFlipped:false,
 };
 
 // ─── Stockfish ────────────────────────────────────────────────────────────────
 async function initStockfish() {
   const res = await fetch('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');
   if (!res.ok) throw new Error('Stockfish fetch failed');
-  const blob = new Blob([await res.text()], { type: 'application/javascript' });
-  return new Promise(resolve => {
+  const blob = new Blob([await res.text()],{type:'application/javascript'});
+  return new Promise(resolve=>{
     const sf = new Worker(URL.createObjectURL(blob));
-    let ready = false;
-    sf.onmessage = e => {
-      if (!ready) {
-        if (e.data === 'uciok') sf.postMessage('isready');
-        if (e.data === 'readyok') { ready = true; state.sfReady = true; resolve(sf); }
+    let ready=false;
+    sf.onmessage=e=>{
+      if(!ready){
+        if(e.data==='uciok') sf.postMessage('isready');
+        if(e.data==='readyok'){ready=true;state.sfReady=true;resolve(sf);}
       }
     };
-    sf.onerror = err => { throw new Error(err.message); };
-    sf.postMessage('uci');
-    state.stockfish = sf;
+    sf.onerror=err=>{throw new Error(err.message);};
+    sf.postMessage('uci'); state.stockfish=sf;
   });
 }
 
-function evaluatePosition(fen, depth = 14) {
-  return new Promise(resolve => {
-    if (!state.stockfish) return resolve(null);
-    const sf = state.stockfish;
-    let bestScore = null;
-    const handler = e => {
-      if (typeof e.data !== 'string') return;
-      const m = e.data.match(/info depth (\d+).*score (cp|mate) (-?\d+)/);
-      if (m && parseInt(m[1]) === depth)
-        bestScore = m[2] === 'mate' ? (parseInt(m[3]) > 0 ? 100000 : -100000) : parseInt(m[3]);
-      if (e.data.startsWith('bestmove')) {
-        sf.removeEventListener('message', handler);
-        const bm = e.data.match(/bestmove (\S+)/);
-        resolve({ score: bestScore, bestMove: bm ? bm[1] : null });
+function evaluatePosition(fen, depth=14) {
+  return new Promise(resolve=>{
+    if(!state.stockfish) return resolve(null);
+    const sf=state.stockfish; let bestScore=null;
+    const handler=e=>{
+      if(typeof e.data!=='string') return;
+      const m=e.data.match(/info depth (\d+).*score (cp|mate) (-?\d+)/);
+      if(m&&parseInt(m[1])===depth) bestScore=m[2]==='mate'?(parseInt(m[3])>0?100000:-100000):parseInt(m[3]);
+      if(e.data.startsWith('bestmove')){
+        sf.removeEventListener('message',handler);
+        const bm=e.data.match(/bestmove (\S+)/);
+        resolve({score:bestScore??0, bestMove:bm?bm[1]:null});
       }
     };
-    sf.addEventListener('message', handler);
+    sf.addEventListener('message',handler);
     sf.postMessage(`position fen ${fen}`);
     sf.postMessage(`go depth ${depth}`);
   });
 }
 
 // ─── Chess.com API ────────────────────────────────────────────────────────────
-function isCurrentMonth(url) {
-  const p = url.split('/');
-  const now = new Date();
-  return parseInt(p[p.length-2]) === now.getFullYear() && parseInt(p[p.length-1]) === now.getMonth()+1;
-}
-
-async function fetchArchive(url) {
-  const key = `chess_archive_${url}`;
-  if (!isCurrentMonth(url)) {
-    try { const c = localStorage.getItem(key); if (c) return JSON.parse(c); } catch {}
-  }
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const { games } = await res.json();
-  if (!isCurrentMonth(url)) { try { localStorage.setItem(key, JSON.stringify(games)); } catch {} }
+function isCurrentMonth(url){const p=url.split('/'),n=new Date();return parseInt(p[p.length-2])===n.getFullYear()&&parseInt(p[p.length-1])===n.getMonth()+1;}
+async function fetchArchive(url){
+  const key=`chess_archive_${url}`;
+  if(!isCurrentMonth(url)){try{const c=localStorage.getItem(key);if(c)return JSON.parse(c);}catch{}}
+  const res=await fetch(url); if(!res.ok) return [];
+  const{games}=await res.json();
+  if(!isCurrentMonth(url)){try{localStorage.setItem(key,JSON.stringify(games));}catch{}}
   return games;
 }
-
-async function fetchAllGames(username, tc, dateFrom, dateTo) {
-  const res = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
-  if (!res.ok) throw new Error('Player not found');
-  const { archives } = await res.json();
-
-  const from = dateFrom ? new Date(dateFrom) : null;
-  const to   = dateTo   ? new Date(dateTo)   : null;
-
-  const filtered = archives.filter(url => {
-    const p = url.split('/'), y = parseInt(p[p.length-2]), m = parseInt(p[p.length-1]);
-    const d = new Date(y, m-1);
-    if (from && d < new Date(from.getFullYear(), from.getMonth())) return false;
-    if (to   && d > new Date(to.getFullYear(),   to.getMonth()))   return false;
+async function fetchAllGames(username,tc,df,dt){
+  const res=await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+  if(!res.ok) throw new Error('Player not found');
+  const{archives}=await res.json();
+  const from=df?new Date(df):null, to=dt?new Date(dt):null;
+  const filtered=archives.filter(url=>{
+    const p=url.split('/'),y=parseInt(p[p.length-2]),m=parseInt(p[p.length-1]),d=new Date(y,m-1);
+    if(from&&d<new Date(from.getFullYear(),from.getMonth())) return false;
+    if(to  &&d>new Date(to.getFullYear(),  to.getMonth()))   return false;
     return true;
   });
-
-  let all = [];
-  for (const url of filtered) all = all.concat(await fetchArchive(url));
-
-  if (tc !== 'all') all = all.filter(g => (g.time_class||'').toLowerCase() === tc);
-  if (from || to) all = all.filter(g => {
-    const d = new Date(g.end_time * 1000);
-    if (from && d < from) return false;
-    if (to   && d > to)   return false;
-    return true;
-  });
+  let all=[];
+  for(const url of filtered) all=all.concat(await fetchArchive(url));
+  if(tc!=='all') all=all.filter(g=>(g.time_class||'').toLowerCase()===tc);
+  if(from||to) all=all.filter(g=>{const d=new Date(g.end_time*1000);if(from&&d<from)return false;if(to&&d>to)return false;return true;});
   return all;
 }
 
 // ─── PGN helpers ─────────────────────────────────────────────────────────────
-function extractMoves(pgn) {
+function extractMoves(pgn){
   return pgn.replace(/\[.*?\]\s*/g,'').replace(/\{[^}]*\}/g,'').replace(/\$\d+/g,'')
-    .trim().split(/\s+/).filter(t => t && !t.match(/^\d+\./) && !t.match(/^(1-0|0-1|1\/2-1\/2|\*)$/));
+    .trim().split(/\s+/).filter(t=>t&&!t.match(/^\d+\./)&&!t.match(/^(1-0|0-1|1\/2-1\/2|\*)$/));
 }
 
-const OPENING_BOOK = {
+const OPENING_BOOK={
   'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O':'Ruy Lopez: Closed',
   'e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6':'Ruy Lopez: Morphy Defence',
   'e4 e5 Nf3 Nc6 Bb5 a6':'Ruy Lopez: Morphy Defence',
@@ -544,9 +489,8 @@ const OPENING_BOOK = {
   'e4 e5 Nc3 Nf6':'Vienna: Frankenstein-Dracula',
   'e4 e5 Nc3 Bc5':'Vienna: Mieses',
   'e4 e5 Nc3':'Vienna Game',
-  'e4 e5 f4 exf4 Nf3':"King's Gambit Accepted: King's Knight",
+  'e4 e5 f4 exf4 Nf3':"King's Gambit Accepted",
   'e4 e5 f4 exf4':"King's Gambit Accepted",
-  'e4 e5 f4 Bc5':"King's Gambit Declined",
   'e4 e5 f4':"King's Gambit",
   'e4 e5 d4 exd4':'Centre Game',
   'e4 e5':'Open Game',
@@ -554,10 +498,8 @@ const OPENING_BOOK = {
   'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6':'Sicilian: Dragon',
   'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6':'Sicilian: Scheveningen',
   'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3':'Sicilian: Open (d6)',
-  'e4 c5 Nf3 d6 d4 cxd4 Nxd4':'Sicilian: Open (d6)',
   'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 d6':'Sicilian: Classical',
   'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 g6':'Sicilian: Accelerated Dragon',
-  'e4 c5 Nf3 Nc6 d4 cxd4 Nxd4':'Sicilian: Open (Nc6)',
   'e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6':'Sicilian: Taimanov',
   'e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6':'Sicilian: Kan',
   'e4 c5 c3 d5':'Sicilian: Alapin, ...d5',
@@ -571,7 +513,6 @@ const OPENING_BOOK = {
   'e4 e6 d4 d5 exd5':'French: Exchange',
   'e4 e6 d4 d5 Nc3 Bb4':'French: Winawer',
   'e4 e6 d4 d5 Nc3 Nf6':'French: Classical',
-  'e4 e6 d4 d5 Nc3':'French: Classical',
   'e4 e6 d4 d5 Nd2':'French: Tarrasch',
   'e4 e6 d4 d5':'French Defence',
   'e4 e6':'French Defence',
@@ -579,7 +520,6 @@ const OPENING_BOOK = {
   'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7':'Caro-Kann: Karpov',
   'e4 c6 d4 d5 e5':'Caro-Kann: Advance',
   'e4 c6 d4 d5 exd5':'Caro-Kann: Exchange',
-  'e4 c6 d4 d5 Nc3':'Caro-Kann: Classical',
   'e4 c6 d4 d5':'Caro-Kann Defence',
   'e4 c6':'Caro-Kann Defence',
   'e4 d5 exd5 Qxd5 Nc3 Qa5':'Scandinavian: Classical',
@@ -588,15 +528,13 @@ const OPENING_BOOK = {
   'e4 d6 d4 Nf6 Nc3 g6':'Pirc Defence',
   'e4 d6 d4 Nf6':'Pirc Defence',
   'e4 g6 d4 Bg7':'Modern Defence',
-  'e4 Nf6 e5 Nd5':"Alekhine's Defence: Modern",
-  'e4 Nf6':"Alekhine's Defence",
-  'd4 d5 c4 e6 Nc3 Nf6 Bg5':"Queen's Gambit Declined: Orthodox",
+  'e4 Nf6 e5 Nd5':"Alekhine's Defence",
+  'd4 d5 c4 e6 Nc3 Nf6 Bg5':"QGD: Orthodox",
   'd4 d5 c4 e6 Nc3 Nf6':"Queen's Gambit Declined",
   'd4 d5 c4 e6':"Queen's Gambit Declined",
-  'd4 d5 c4 dxc4 Nf3 Nf6':"Queen's Gambit Accepted: Classical",
+  'd4 d5 c4 dxc4 Nf3 Nf6':"QGA: Classical",
   'd4 d5 c4 dxc4':"Queen's Gambit Accepted",
   'd4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4':'Slav: Czech',
-  'd4 d5 c4 c6 Nf3 Nf6 Nc3':'Slav Defence',
   'd4 d5 c4 c6 Nf3 Nf6':'Slav Defence',
   'd4 d5 c4 c6':'Slav Defence',
   'd4 d5 c4':"Queen's Gambit",
@@ -608,7 +546,7 @@ const OPENING_BOOK = {
   'd4 Nf6 c4 e6 Nf3 b6 g3 Bb7':"Queen's Indian: Fianchetto",
   'd4 Nf6 c4 e6 Nf3 b6':"Queen's Indian Defence",
   'd4 Nf6 c4 e6 g3':'Catalan Opening',
-  'd4 Nf6 c4 e6':"Nimzo/Queen's Indian",
+  'd4 Nf6 c4 e6':"Nimzo/QID",
   'd4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O':"King's Indian: Main Line",
   'd4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3':"King's Indian: Samisch",
   'd4 Nf6 c4 g6 Nc3 Bg7 e4 d6':"King's Indian Defence",
@@ -616,7 +554,6 @@ const OPENING_BOOK = {
   'd4 Nf6 c4 g6':"King's Indian Defence",
   'd4 Nf6 c4 c5 d5 e6':'Benoni: Modern',
   'd4 Nf6 c4 c5 d5':'Benoni Defence',
-  'd4 Nf6 c4 c5':'Benoni Defence',
   'd4 Nf6 Bf4':'London System',
   'd4 Nf6 c4':'Indian Defence',
   'd4 Nf6':'Indian Defence',
@@ -625,18 +562,13 @@ const OPENING_BOOK = {
   'd4 f5':'Dutch Defence',
   'c4 e5 Nc3 Nf6 Nf3 Nc6 g3':'English: Four Knights',
   'c4 e5 Nc3 Nf6':'English: Reversed Sicilian',
-  'c4 e5 Nc3':'English: Reversed Sicilian',
-  "c4 e5 g3":"English: King's English",
   "c4 e5":"English: King's English",
   'c4 c5 Nf3 Nf6 Nc3':'English: Symmetrical',
   'c4 c5':'English: Symmetrical',
   'c4 Nf6 Nc3 d5':'English: Agincourt',
-  'c4 Nf6':'English: Anglo-Indian',
   'c4':'English Opening',
   "Nf3 d5 c4 e6":"Réti: QG Invitation",
-  "Nf3 d5 c4 c6":"Réti: Slav",
   "Nf3 d5 c4":"Réti Opening",
-  "Nf3 Nf6 c4":"Réti Opening",
   "Nf3 d5":"Réti Opening",
   "Nf3":"Réti/Zukertort Opening",
   "g3":"King's Fianchetto Opening",
@@ -645,179 +577,272 @@ const OPENING_BOOK = {
   "f4":"Bird's Opening",
 };
 
-function getOpeningName(pgn) {
-  const om = pgn.match(/\[Opening "([^"]+)"\]/);
-  const vm = pgn.match(/\[Variation "([^"]+)"\]/);
-  if (om) return om[1] + (vm ? ': ' + vm[1] : '');
-  const moves = extractMoves(pgn);
-  for (let len = 10; len >= 1; len--) {
-    const key = moves.slice(0, len).join(' ');
-    if (OPENING_BOOK[key]) return OPENING_BOOK[key];
-  }
-  const eco = pgn.match(/\[ECO "([^"]+)"\]/);
-  if (eco) return 'ECO ' + eco[1];
-  return moves.slice(0, 4).join(' ') || 'Unknown';
+// Build prefix set for fast book detection
+const BOOK_PREFIXES = new Set();
+for(const key of Object.keys(OPENING_BOOK)){
+  const p=key.split(' ');
+  for(let i=1;i<=p.length;i++) BOOK_PREFIXES.add(p.slice(0,i).join(' '));
 }
 
-function parseGameMoves(pgn) {
-  const chess = new Chess();
-  const moves = extractMoves(pgn);
-  const positions = [{ fen: chess.fen(), san: null }];
-  for (const san of moves) {
-    try {
-      const m = chess.move(san, { sloppy: true });
-      if (!m) break;
-      positions.push({ fen: chess.fen(), san: m.san });
-    } catch { break; }
+function getBookDepth(moves){
+  let depth=0;
+  for(let i=1;i<=Math.min(moves.length,20);i++){
+    if(BOOK_PREFIXES.has(moves.slice(0,i).join(' '))) depth=i;
+    else break;
+  }
+  return depth;
+}
+
+function getOpeningName(pgn){
+  const om=pgn.match(/\[Opening "([^"]+)"\]/), vm=pgn.match(/\[Variation "([^"]+)"\]/);
+  if(om) return om[1]+(vm?': '+vm[1]:'');
+  const moves=extractMoves(pgn);
+  for(let len=10;len>=1;len--){const k=moves.slice(0,len).join(' ');if(OPENING_BOOK[k])return OPENING_BOOK[k];}
+  const eco=pgn.match(/\[ECO "([^"]+)"\]/);
+  if(eco) return 'ECO '+eco[1];
+  return moves.slice(0,4).join(' ')||'Unknown';
+}
+
+function parseGameMoves(pgn){
+  const chess=new Chess(), moves=extractMoves(pgn);
+  const positions=[{fen:chess.fen(),san:null,uci:null}];
+  for(const san of moves){
+    try{
+      const m=chess.move(san,{sloppy:true});
+      if(!m) break;
+      positions.push({fen:chess.fen(), san:m.san, uci:m.from+m.to+(m.promotion||'')});
+    }catch{break;}
   }
   return positions;
 }
 
-// ─── Analysis ─────────────────────────────────────────────────────────────────
-async function analyseGame(game, username) {
-  const key = `chess_analysis_${game.uuid}`;
-  const cached = localStorage.getItem(key);
-  if (cached) { try { return JSON.parse(cached); } catch {} }
+// ─── Accuracy / win% ─────────────────────────────────────────────────────────
+function winP(cp){
+  const c=Math.max(-1500,Math.min(1500,cp??0));
+  return 1/(1+Math.exp(-0.00368208*c));
+}
+function moveAccuracy(prevCpWhite, currCpWhite, isWhite){
+  const prev=isWhite?winP(prevCpWhite):1-winP(prevCpWhite);
+  const curr=isWhite?winP(currCpWhite):1-winP(currCpWhite);
+  const delta=Math.max(0,(prev-curr)*100);
+  return Math.max(0, Math.min(100, 103.1668*Math.exp(-0.04354*delta)-3.1669));
+}
+function cpToLabel(cp){
+  if(cp==null) return '';
+  if(cp>=10000) return '+M'; if(cp<=-10000) return '-M';
+  return (cp>=0?'+':'')+(cp/100).toFixed(1);
+}
 
-  const positions = parseGameMoves(game.pgn);
-  if (positions.length < 3) return null;
+// ─── Analysis v2 ─────────────────────────────────────────────────────────────
+const CLS = {book:'book',best:'best',excellent:'excellent',good:'good',inaccuracy:'inaccuracy',mistake:'mistake',blunder:'blunder'};
+const CLS_THRESHOLDS = {best:0,excellent:10,good:25,inaccuracy:50,mistake:150}; // cploss thresholds
 
-  const isWhite = (game.white?.username||'').toLowerCase() === username.toLowerCase();
-  let blunders = 0, mistakes = 0, inaccuracies = 0, phaseLoss = null, blunderMoves = [], prevScore = null;
+function classifyMove(cploss, isPlayedBest){
+  if(isPlayedBest)              return CLS.best;
+  if(cploss<=CLS_THRESHOLDS.excellent) return CLS.excellent;
+  if(cploss<=CLS_THRESHOLDS.good)      return CLS.good;
+  if(cploss<=CLS_THRESHOLDS.inaccuracy)return CLS.inaccuracy;
+  if(cploss<=CLS_THRESHOLDS.mistake)   return CLS.mistake;
+  return CLS.blunder;
+}
 
-  for (let i = 0; i < positions.length - 1; i++) {
-    const ev = await evaluatePosition(positions[i].fen, 14);
-    if (!ev) continue;
-    const playerMove = (isWhite && i % 2 === 0) || (!isWhite && i % 2 === 1);
-    if (prevScore !== null && playerMove) {
-      const pp = isWhite ? prevScore : -prevScore;
-      const pc = isWhite ? ev.score  : -ev.score;
-      const swing = pp - pc;
-      if (swing >= 150) {
-        blunders++;
-        blunderMoves.push({ moveIndex: i, san: positions[i+1]?.san, swing, fen: positions[i].fen, bestMove: ev.bestMove });
-        if (!phaseLoss) { const mn = Math.ceil(i/2); phaseLoss = mn < 10 ? 'opening' : mn <= 30 ? 'middlegame' : 'endgame'; }
-      } else if (swing >= 50) {
-        mistakes++;
-        blunderMoves.push({ moveIndex: i, san: positions[i+1]?.san, swing, fen: positions[i].fen, bestMove: ev.bestMove, isMistake: true });
-      } else if (swing >= 20) inaccuracies++;
-    }
-    prevScore = ev.score;
+async function analyseGameV2(game, username){
+  const key=`chess_analysis_v2_${game.uuid}`;
+  const cached=localStorage.getItem(key);
+  if(cached){try{return JSON.parse(cached);}catch{}}
+
+  const positions=parseGameMoves(game.pgn);
+  if(positions.length<4) return null;
+
+  const isWhite=(game.white?.username||'').toLowerCase()===username.toLowerCase();
+  const moves=extractMoves(game.pgn);
+  const bookDepth=getBookDepth(moves);
+
+  // Evaluate all positions sequentially
+  const evs=[];
+  for(let i=0;i<positions.length;i++){
+    const depth=(i<bookDepth)?8:14;
+    const ev=await evaluatePosition(positions[i].fen,depth);
+    evs.push(ev);
   }
 
-  const result = { blunders, mistakes, inaccuracies, phaseLoss, blunderMoves, playerColor: isWhite ? 'white' : 'black' };
-  localStorage.setItem(key, JSON.stringify(result));
+  // Build move details for player's moves
+  const moveDetails=[];
+  let totalCpLoss=0, playerMoveCount=0;
+  let phaseLoss=null;
+  const accuracies=[];
+
+  for(let i=1;i<positions.length;i++){
+    // Move from positions[i-1] to positions[i]
+    // positions[i-1]: even index = white to move, odd = black to move
+    const whiteJustMoved=(i-1)%2===0;
+    const isPlayerMove=(isWhite&&whiteJustMoved)||(!isWhite&&!whiteJustMoved);
+    if(!isPlayerMove) continue;
+
+    const isBook=i<=bookDepth;
+    const prevEv=evs[i-1], currEv=evs[i];
+    if(!prevEv||!currEv) continue;
+
+    const evalBefore=prevEv.score??0;
+    const evalAfter=currEv.score??0;
+    const playerPrev=isWhite?evalBefore:-evalBefore;
+    const playerCurr=isWhite?evalAfter :-evalAfter;
+    const cploss=Math.max(0,playerPrev-playerCurr);
+    const isPlayedBest=!!(prevEv.bestMove&&positions[i].uci&&prevEv.bestMove===positions[i].uci);
+
+    const classification=isBook?CLS.book:classifyMove(cploss,isPlayedBest);
+
+    if(!isBook){
+      totalCpLoss+=cploss;
+      playerMoveCount++;
+      accuracies.push(moveAccuracy(evalBefore,evalAfter,isWhite));
+      if(!phaseLoss&&classification===CLS.blunder){
+        const mn=Math.ceil(i/2);
+        phaseLoss=mn<10?'opening':mn<=30?'middlegame':'endgame';
+      }
+    }
+
+    moveDetails.push({
+      moveIndex:i-1,   // index into positions[] (position before the move)
+      posIndex:i,      // index into positions[] after move
+      san:positions[i].san,
+      uci:positions[i].uci,
+      classification,
+      cploss:isBook?0:cploss,
+      evalBefore,
+      evalAfter,
+      bestMove:prevEv.bestMove,
+      fen:positions[i-1].fen,
+    });
+  }
+
+  const accuracy=accuracies.length?Math.round(accuracies.reduce((a,b)=>a+b,0)/accuracies.length):100;
+  const acpl=playerMoveCount?Math.round(totalCpLoss/playerMoveCount):0;
+
+  const countBy=cls=>moveDetails.filter(m=>m.classification===cls).length;
+
+  const result={
+    accuracy, acpl,
+    books:countBy(CLS.book),  bests:countBy(CLS.best),
+    excellents:countBy(CLS.excellent), goods:countBy(CLS.good),
+    inaccuracies:countBy(CLS.inaccuracy), mistakes:countBy(CLS.mistake),
+    blunders:countBy(CLS.blunder),
+    totalMoves:moveDetails.length,
+    phaseLoss,
+    playerColor:isWhite?'white':'black',
+    moveDetails,
+    evalHistory:evs.map(e=>e?.score??0),
+  };
+  localStorage.setItem(key,JSON.stringify(result));
   return result;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function isPlayerWhite(game) { return (game.white?.username||'').toLowerCase() === state.username.toLowerCase(); }
-function gameOutcome(game) {
-  const r = isPlayerWhite(game) ? game.white?.result : game.black?.result;
-  return r === 'win' ? 'win' : ['checkmated','resigned','timeout','abandoned'].includes(r) ? 'loss' : 'draw';
+function isPlayerWhite(game){return(game.white?.username||'').toLowerCase()===state.username.toLowerCase();}
+function gameOutcome(game){
+  const r=isPlayerWhite(game)?game.white?.result:game.black?.result;
+  return r==='win'?'win':['checkmated','resigned','timeout','abandoned'].includes(r)?'loss':'draw';
 }
-function wlBar(w,d,l) {
-  const t = w+d+l||1;
-  return `<div class="wl-bar"><div class="w" style="width:${w/t*100}%"></div><div class="d" style="width:${d/t*100}%"></div><div class="l" style="width:${l/t*100}%"></div></div>`;
+function wlBar(w,d,l){const t=w+d+l||1;return`<div class="wl-bar"><div class="w" style="width:${w/t*100}%"></div><div class="d" style="width:${d/t*100}%"></div><div class="l" style="width:${l/t*100}%"></div></div>`;}
+function winPct(w,d,l){return((w+d*.5)/(w+d+l||1)*100).toFixed(0)+'%';}
+function fmtDate(ts){return new Date(ts*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});}
+function accColor(acc){return acc>=80?'var(--green)':acc>=60?'var(--yellow)':'var(--red)';}
+
+const CLS_COLORS={book:'#6b7280',best:'#22c55e',excellent:'#86efac',good:'#60a5fa',inaccuracy:'#f59e0b',mistake:'#f97316',blunder:'#ef4444'};
+const CLS_SUFFIX={book:'',best:'',excellent:'!',good:'',inaccuracy:'?!',mistake:'?',blunder:'??'};
+const CLS_ORDER=[CLS.book,CLS.best,CLS.excellent,CLS.good,CLS.inaccuracy,CLS.mistake,CLS.blunder];
+
+function clsBar(an){
+  if(!an) return '';
+  const total=an.totalMoves||1;
+  const counts={book:an.books,best:an.bests,excellent:an.excellents,good:an.goods,inaccuracy:an.inaccuracies,mistake:an.mistakes,blunder:an.blunders};
+  return `<div class="cls-bar">${CLS_ORDER.map(c=>`<div class="cls-seg" style="background:${CLS_COLORS[c]};flex:${counts[c]||0}" title="${c}: ${counts[c]||0}"></div>`).join('')}</div>`;
 }
-function winPct(w,d,l) { return ((w+d*.5)/(w+d+l||1)*100).toFixed(0)+'%'; }
-function fmtDate(ts) { return new Date(ts*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}); }
+
+// ─── SVG charts ───────────────────────────────────────────────────────────────
+function drawLineChart(svgId, points, color='var(--accent)', yLabel=''){
+  const svg=document.getElementById(svgId);
+  if(!svg||points.length<2) return;
+  const W=svg.clientWidth||500, H=parseInt(svg.getAttribute('height')||'180');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const pad={top:16,right:16,bottom:28,left:44};
+  const iW=W-pad.left-pad.right, iH=H-pad.top-pad.bottom;
+  const vals=points.map(p=>p.y);
+  const minV=Math.min(...vals)-5, maxV=Math.max(...vals)+5;
+  const xs=i=>pad.left+i/(points.length-1)*iW;
+  const ys=v=>pad.top+(1-(v-minV)/(maxV-minV||1))*iH;
+  let html='';
+  for(let i=0;i<=4;i++){
+    const v=minV+(maxV-minV)*i/4, y=ys(v);
+    html+=`<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
+    html+=`<text x="${pad.left-6}" y="${y+4}" text-anchor="end" fill="#6b7280" font-size="11">${Math.round(v)}${yLabel}</text>`;
+  }
+  const d=points.map((p,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(p.y).toFixed(1)}`).join(' ');
+  html+=`<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  const last=points[points.length-1];
+  html+=`<circle cx="${xs(points.length-1)}" cy="${ys(last.y)}" r="4" fill="${color}"/>`;
+  html+=`<text x="${xs(points.length-1)-6}" y="${ys(last.y)-8}" fill="#e2e8f0" font-size="11">${Math.round(last.y)}${yLabel}</text>`;
+  svg.innerHTML=html;
+}
 
 // ─── Overview ─────────────────────────────────────────────────────────────────
-function renderOverview(games) {
-  document.getElementById('overview-empty').style.display = 'none';
-  document.getElementById('overview-content').style.display = 'block';
+function renderOverview(games){
+  document.getElementById('overview-empty').style.display='none';
+  document.getElementById('overview-content').style.display='block';
 
-  let wins=0, losses=0, draws=0, rSum=0, rN=0;
-  for (const g of games) {
-    const iw = isPlayerWhite(g);
-    const r = iw ? g.white?.result : g.black?.result;
-    const rating = iw ? g.white?.rating : g.black?.rating;
-    if (rating) { rSum += rating; rN++; }
-    if (r === 'win') wins++;
-    else if (['checkmated','resigned','timeout','abandoned'].includes(r)) losses++;
+  let wins=0,losses=0,draws=0,rSum=0,rN=0;
+  for(const g of games){
+    const iw=isPlayerWhite(g), r=iw?g.white?.result:g.black?.result, rating=iw?g.white?.rating:g.black?.rating;
+    if(rating){rSum+=rating;rN++;}
+    if(r==='win')wins++;
+    else if(['checkmated','resigned','timeout','abandoned'].includes(r))losses++;
     else draws++;
   }
-  const sorted = [...games].sort((a,b) => b.end_time - a.end_time);
-  const g0 = sorted[0];
-  const latestR = g0 ? (isPlayerWhite(g0) ? g0.white?.rating : g0.black?.rating) || '—' : '—';
+  const sorted=[...games].sort((a,b)=>b.end_time-a.end_time);
+  const g0=sorted[0], latestR=g0?(isPlayerWhite(g0)?g0.white?.rating:g0.black?.rating)||'—':'—';
+  const analysed=Object.values(state.analysisResults);
+  const avgAcc=analysed.length?Math.round(analysed.reduce((s,a)=>s+a.accuracy,0)/analysed.length):null;
+  const avgAcpl=analysed.length?Math.round(analysed.reduce((s,a)=>s+a.acpl,0)/analysed.length):null;
 
-  document.getElementById('stat-cards').innerHTML = `
-    <div class="stat-card"><div class="value" style="color:var(--accent)">${games.length}</div><div class="label">Games Loaded</div></div>
-    <div class="stat-card"><div class="value" style="color:var(--green)">${wins}</div><div class="label">Wins</div><div class="sub">${winPct(wins,draws,losses)} score</div></div>
-    <div class="stat-card"><div class="value" style="color:var(--red)">${losses}</div><div class="label">Losses</div></div>
-    <div class="stat-card"><div class="value">${latestR}</div><div class="label">Current Rating</div><div class="sub">Avg ${rN ? Math.round(rSum/rN) : '—'}</div></div>`;
+  document.getElementById('stat-cards').innerHTML=`
+    <div class="stat-card"><div class="val" style="color:var(--accent)">${games.length}</div><div class="lbl">Games Loaded</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--green)">${wins}</div><div class="lbl">Wins</div><div class="sub">${winPct(wins,draws,losses)} score</div></div>
+    <div class="stat-card"><div class="val">${latestR}</div><div class="lbl">Current Rating</div><div class="sub">Avg ${rN?Math.round(rSum/rN):'—'}</div></div>
+    <div class="stat-card"><div class="val" style="color:${avgAcc!=null?accColor(avgAcc):'var(--text-muted)'}">${avgAcc!=null?avgAcc+'%':'—'}</div><div class="lbl">Avg Accuracy</div><div class="sub">${avgAcpl!=null?'ACPL '+avgAcpl:'Pending…'}</div></div>`;
 
   // Pie chart
-  const canvas = document.getElementById('results-chart');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.parentElement.clientWidth - 40 || 300;
-  canvas.width = W; canvas.height = 200;
-  const cx = W/2, cy = 82, r = 68, total = wins+draws+losses||1;
-  const slices = [
-    {val:wins,  color:'#22c55e', label:`Win ${(wins/total*100).toFixed(0)}%`},
-    {val:draws, color:'#f59e0b', label:`Draw ${(draws/total*100).toFixed(0)}%`},
-    {val:losses,color:'#ef4444', label:`Loss ${(losses/total*100).toFixed(0)}%`},
-  ];
-  let start = -Math.PI/2;
-  for (const s of slices) {
-    const angle = s.val/total*Math.PI*2;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,start+angle); ctx.closePath();
-    ctx.fillStyle = s.color; ctx.fill(); start += angle;
-  }
-  ctx.font = '12px Segoe UI,system-ui,sans-serif';
-  let lx = 16;
-  for (const s of slices) {
-    ctx.fillStyle = s.color; ctx.fillRect(lx,168,10,10);
-    ctx.fillStyle = '#e2e8f0'; ctx.fillText(s.label, lx+14, 178);
-    lx += ctx.measureText(s.label).width + 28;
-  }
+  const canvas=document.getElementById('results-chart'), ctx=canvas.getContext('2d');
+  const W=canvas.parentElement.clientWidth-40||300; canvas.width=W; canvas.height=200;
+  const cx=W/2, cy=82, r=68, total=wins+draws+losses||1;
+  const slices=[{val:wins,color:'#22c55e',label:`Win ${(wins/total*100).toFixed(0)}%`},{val:draws,color:'#f59e0b',label:`Draw ${(draws/total*100).toFixed(0)}%`},{val:losses,color:'#ef4444',label:`Loss ${(losses/total*100).toFixed(0)}%`}];
+  let start=-Math.PI/2;
+  for(const s of slices){const angle=s.val/total*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+angle);ctx.closePath();ctx.fillStyle=s.color;ctx.fill();start+=angle;}
+  ctx.font='12px Segoe UI,system-ui,sans-serif'; let lx=16;
+  for(const s of slices){ctx.fillStyle=s.color;ctx.fillRect(lx,168,10,10);ctx.fillStyle='#e2e8f0';ctx.fillText(s.label,lx+14,178);lx+=ctx.measureText(s.label).width+28;}
 
-  drawRatingChart(games);
-  renderPhaseDistribution();
-  renderBlunderTrend(games);
+  // Rating chart
+  const rPoints=games.map(g=>({x:g.end_time,y:isPlayerWhite(g)?g.white?.rating:g.black?.rating})).filter(p=>p.y).sort((a,b)=>a.x-b.x);
+  if(rPoints.length>=2) drawLineChart('rating-chart',rPoints,'var(--accent)','');
+
+  renderPhaseDistribution('phase-display');
+  renderAccuracyChart(games);
 }
 
-function drawRatingChart(games) {
-  const points = games.map(g => ({
-    ts: g.end_time,
-    rating: isPlayerWhite(g) ? g.white?.rating : g.black?.rating,
-  })).filter(p => p.rating).sort((a,b) => a.ts - b.ts);
-  if (points.length < 2) return;
-
-  const svg = document.getElementById('rating-chart');
-  const W = svg.clientWidth||500, H = 220;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const pad = {top:16,right:16,bottom:28,left:44};
-  const iW = W-pad.left-pad.right, iH = H-pad.top-pad.bottom;
-  const ratings = points.map(p=>p.rating);
-  const minR = Math.min(...ratings)-20, maxR = Math.max(...ratings)+20;
-  const minT = points[0].ts, maxT = points[points.length-1].ts;
-  const xs = t => pad.left + (t-minT)/(maxT-minT||1)*iW;
-  const ys = r => pad.top  + (1-(r-minR)/(maxR-minR||1))*iH;
-
-  let html = '';
-  for (let i=0; i<=5; i++) {
-    const rv = minR + (maxR-minR)*i/5, y = ys(rv);
-    html += `<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
-    html += `<text x="${pad.left-6}" y="${y+4}" text-anchor="end" fill="#6b7280" font-size="11">${Math.round(rv)}</text>`;
-  }
-  const d = points.map((p,i) => `${i===0?'M':'L'}${xs(p.ts).toFixed(1)},${ys(p.rating).toFixed(1)}`).join(' ');
-  html += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
-  const last = points[points.length-1];
-  html += `<circle cx="${xs(last.ts)}" cy="${ys(last.rating)}" r="4" fill="var(--accent)"/>`;
-  html += `<text x="${xs(last.ts)-6}" y="${ys(last.rating)-8}" fill="#e2e8f0" font-size="11">${last.rating}</text>`;
-  svg.innerHTML = html;
+function renderAccuracyChart(games){
+  const analysed=games.filter(g=>state.analysisResults[g.uuid]).sort((a,b)=>a.end_time-b.end_time);
+  if(analysed.length<2) return;
+  const pts=analysed.map(g=>({x:g.end_time,y:state.analysisResults[g.uuid].accuracy}));
+  drawLineChart('accuracy-chart',pts,'var(--accent)','%');
 }
 
-function renderPhaseDistribution() {
-  const el = document.getElementById('phase-display');
-  const results = Object.values(state.analysisResults);
-  if (!results.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0">Analysis pending…</p>'; return; }
-  const counts = {opening:0,middlegame:0,endgame:0,unknown:0};
-  for (const r of results) counts[r.phaseLoss||'unknown']++;
-  const total = results.length||1;
-  el.innerHTML = `
+function renderPhaseDistribution(elId){
+  const el=document.getElementById(elId); if(!el) return;
+  const results=Object.values(state.analysisResults);
+  if(!results.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13px;padding:8px 0">Analysis pending…</p>';return;}
+  const counts={opening:0,middlegame:0,endgame:0,unknown:0};
+  for(const r of results) counts[r.phaseLoss||'unknown']++;
+  const total=results.length||1;
+  el.innerHTML=`
     <div class="phase-bar" style="margin-bottom:16px">
       <div class="phase-seg" style="background:var(--red);width:${counts.opening/total*100}%">${counts.opening||''}</div>
       <div class="phase-seg" style="background:var(--yellow);width:${counts.middlegame/total*100}%">${counts.middlegame||''}</div>
@@ -831,349 +856,352 @@ function renderPhaseDistribution() {
     </table>`;
 }
 
-function renderBlunderTrend(games) {
-  const svg = document.getElementById('blunder-trend-chart');
-  const analysed = games.filter(g => state.analysisResults[g.uuid]).sort((a,b) => a.end_time - b.end_time);
-  if (analysed.length < 2) { svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#6b7280" font-size="13">Analysis pending…</text>`; return; }
+// ─── Analysis tab ────────────────────────────────────────────────────────────
+function renderAnalysisTab(games){
+  const results=games.map(g=>({game:g,an:state.analysisResults[g.uuid]})).filter(x=>x.an);
+  if(!results.length) return;
+  document.getElementById('analysis-empty').style.display='none';
+  document.getElementById('analysis-content').style.display='block';
 
-  const W = svg.clientWidth||500, H = 200;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const pad = {top:16,right:16,bottom:28,left:36};
-  const iW = W-pad.left-pad.right, iH = H-pad.top-pad.bottom;
-  const pts = analysed.map(g => ({ b: state.analysisResults[g.uuid].blunders, m: state.analysisResults[g.uuid].mistakes }));
-  const maxY = Math.max(...pts.map(p=>p.b+p.m),1);
-  const xs = i => pad.left + i/(pts.length-1)*iW;
-  const ys = v => pad.top  + (1-v/maxY)*iH;
-
-  let html = '';
-  for (let i=0; i<=4; i++) {
-    const y = pad.top + i/4*iH;
-    html += `<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
-    html += `<text x="${pad.left-4}" y="${y+4}" text-anchor="end" fill="#6b7280" font-size="10">${Math.round(maxY*(1-i/4))}</text>`;
+  const totalMoves=results.reduce((s,r)=>s+r.an.totalMoves,0)||1;
+  const totals={books:0,bests:0,excellents:0,goods:0,inaccuracies:0,mistakes:0,blunders:0};
+  let sumAcc=0,sumAcpl=0,wAcc=0,wN=0,bAcc=0,bN=0;
+  for(const{an}of results){
+    for(const k of Object.keys(totals)) totals[k]+=an[k]||0;
+    sumAcc+=an.accuracy; sumAcpl+=an.acpl;
+    if(an.playerColor==='white'){wAcc+=an.accuracy;wN++;}else{bAcc+=an.accuracy;bN++;}
   }
-  html += `<path d="${pts.map((p,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(p.b).toFixed(1)}`).join(' ')}" fill="none" stroke="#ef4444" stroke-width="2"/>`;
-  html += `<path d="${pts.map((p,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(p.m).toFixed(1)}`).join(' ')}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>`;
-  html += `<rect x="${pad.left}" y="${H-16}" width="10" height="3" fill="#ef4444"/>`;
-  html += `<text x="${pad.left+14}" y="${H-12}" fill="#e2e8f0" font-size="11">Blunders</text>`;
-  html += `<rect x="${pad.left+80}" y="${H-16}" width="10" height="3" fill="#f59e0b"/>`;
-  html += `<text x="${pad.left+94}" y="${H-12}" fill="#e2e8f0" font-size="11">Mistakes</text>`;
-  svg.innerHTML = html;
+  const n=results.length||1;
+  const avgAcc=Math.round(sumAcc/n), avgAcpl=Math.round(sumAcpl/n);
+  const bookPct=Math.round(totals.books/totalMoves*100);
+  const goodPct=Math.round((totals.bests+totals.excellents+totals.goods)/totalMoves*100);
+
+  document.getElementById('skill-cards').innerHTML=`
+    <div class="skill-card"><div class="sk-val" style="color:${accColor(avgAcc)}">${avgAcc}%</div><div class="sk-lbl">Average Accuracy</div><div class="sk-bar"><div class="sk-fill" style="width:${avgAcc}%"></div></div></div>
+    <div class="skill-card"><div class="sk-val">${avgAcpl}</div><div class="sk-lbl">Avg Centipawn Loss</div><div class="sk-bar"><div class="sk-fill" style="width:${Math.max(0,100-avgAcpl/2)}%"></div></div></div>
+    <div class="skill-card"><div class="sk-val" style="color:var(--blue)">${bookPct}%</div><div class="sk-lbl">Moves in Theory</div><div class="sk-bar"><div class="sk-fill" style="width:${bookPct}%"></div></div></div>
+    <div class="skill-card"><div class="sk-val" style="color:var(--green)">${goodPct}%</div><div class="sk-lbl">Best/Excellent/Good</div><div class="sk-bar"><div class="sk-fill" style="width:${goodPct}%"></div></div></div>
+    <div class="skill-card"><div class="sk-val" style="color:var(--red)">${(totals.blunders/n).toFixed(1)}</div><div class="sk-lbl">Blunders per Game</div><div class="sk-bar"><div class="sk-fill" style="background:var(--red);width:${Math.min(100,totals.blunders/n/5*100)}%"></div></div></div>
+    <div class="skill-card"><div class="sk-val" style="color:var(--yellow)">${(totals.mistakes/n).toFixed(1)}</div><div class="sk-lbl">Mistakes per Game</div><div class="sk-bar"><div class="sk-fill" style="background:var(--yellow);width:${Math.min(100,totals.mistakes/n/10*100)}%"></div></div></div>`;
+
+  // Move quality distribution
+  document.getElementById('cls-distribution').innerHTML=`
+    ${clsBar({...totals,totalMoves})}
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+      ${CLS_ORDER.map(c=>{
+        const cnt=totals[c+'s']??totals[c]??0;
+        return`<div style="font-size:12px"><span style="color:${CLS_COLORS[c]};font-weight:600">${cnt}</span> <span style="color:var(--text-muted)">${c}</span></div>`;
+      }).join('')}
+    </div>`;
+
+  // Accuracy by colour
+  document.getElementById('accuracy-by-color').innerHTML=`
+    <table>
+      <thead><tr><th>Colour</th><th>Games</th><th>Avg Accuracy</th><th>Blunders/game</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-w">White</span></td><td>${wN}</td><td style="color:${accColor(wN?Math.round(wAcc/wN):0)}">${wN?Math.round(wAcc/wN)+'%':'—'}</td><td style="color:var(--red)">${wN?(results.filter(r=>r.an.playerColor==='white').reduce((s,r)=>s+r.an.blunders,0)/wN).toFixed(1):'—'}</td></tr>
+        <tr><td><span class="badge badge-b">Black</span></td><td>${bN}</td><td style="color:${accColor(bN?Math.round(bAcc/bN):0)}">${bN?Math.round(bAcc/bN)+'%':'—'}</td><td style="color:var(--red)">${bN?(results.filter(r=>r.an.playerColor==='black').reduce((s,r)=>s+r.an.blunders,0)/bN).toFixed(1):'—'}</td></tr>
+      </tbody>
+    </table>`;
+
+  // Worst games
+  const worst=[...results].sort((a,b)=>(b.an.blunders*3+b.an.mistakes)-(a.an.blunders*3+a.an.mistakes)).slice(0,10);
+  document.getElementById('worst-games-table').innerHTML=`
+    <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Accuracy</th><th style="color:var(--red)">??</th><th style="color:var(--yellow)">?</th></tr></thead>
+    <tbody>${worst.map(({game:g,an})=>{
+      const iw=isPlayerWhite(g),opp=iw?g.black?.username:g.white?.username,outcome=gameOutcome(g);
+      return`<tr style="cursor:pointer" onclick="openGameInBoard('${g.uuid}')">
+        <td>${fmtDate(g.end_time)}</td><td>${opp||'?'}</td>
+        <td><span class="badge badge-${outcome}">${outcome}</span></td>
+        <td style="color:${accColor(an.accuracy)}">${an.accuracy}%</td>
+        <td style="color:var(--red)">${an.blunders}</td>
+        <td style="color:var(--yellow)">${an.mistakes}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+
+  renderPhaseDistribution('phase-display-2');
 }
 
 // ─── Openings ─────────────────────────────────────────────────────────────────
-let openingGamesMap = {}; // name -> [game, ...]
-
-function renderOpenings(games) {
-  document.getElementById('openings-empty').style.display = 'none';
-  document.getElementById('openings-content').style.display = 'block';
-  openingGamesMap = {};
-
-  const whiteMap = {}, blackMap = {};
-  for (const g of games) {
-    const iw = isPlayerWhite(g);
-    const outcome = gameOutcome(g) === 'win' ? 'w' : gameOutcome(g) === 'loss' ? 'l' : 'd';
-    const name = getOpeningName(g.pgn);
-    const map = iw ? whiteMap : blackMap;
-    if (!map[name]) map[name] = { w:0, d:0, l:0 };
-    map[name][outcome]++;
-    if (!openingGamesMap[name]) openingGamesMap[name] = [];
+let openingGamesMap={};
+function renderOpenings(games){
+  document.getElementById('openings-empty').style.display='none';
+  document.getElementById('openings-content').style.display='block';
+  openingGamesMap={};
+  const wm={},bm={};
+  for(const g of games){
+    const iw=isPlayerWhite(g),outcome=gameOutcome(g),o=outcome==='win'?'w':outcome==='loss'?'l':'d',name=getOpeningName(g.pgn),map=iw?wm:bm;
+    if(!map[name]) map[name]={w:0,d:0,l:0};
+    map[name][o]++;
+    if(!openingGamesMap[name]) openingGamesMap[name]=[];
     openingGamesMap[name].push(g);
   }
-
-  const toRows = map => Object.entries(map).sort((a,b) => (b[1].w+b[1].d+b[1].l)-(a[1].w+a[1].d+a[1].l)).slice(0,20);
-
-  const tableHtml = rows => `
-    <thead><tr><th>Opening</th><th>Games</th><th>W/D/L</th><th>Score</th></tr></thead>
-    <tbody>${rows.map(([name, r]) => {
-      const total = r.w+r.d+r.l;
-      const pct = parseFloat(winPct(r.w,r.d,r.l));
-      const bad = pct < 40;
-      const label = name.length > 38 ? name.slice(0,36)+'…' : name;
-      return `<tr class="opening-row" onclick="openOpeningDetail('${encodeURIComponent(name)}')">
-        <td title="${name}">${label}</td>
-        <td>${total}</td>
-        <td>${wlBar(r.w,r.d,r.l)} <span style="font-size:11px;color:var(--text-muted)">${r.w}/${r.d}/${r.l}</span></td>
-        <td style="color:${bad?'var(--red)':pct>=55?'var(--green)':'var(--text)'}">${pct}%</td>
-      </tr>`;
-    }).join('')}</tbody>`;
-
-  document.getElementById('openings-white-table').innerHTML = tableHtml(toRows(whiteMap));
-  document.getElementById('openings-black-table').innerHTML = tableHtml(toRows(blackMap));
+  const toRows=map=>Object.entries(map).sort((a,b)=>(b[1].w+b[1].d+b[1].l)-(a[1].w+a[1].d+a[1].l)).slice(0,20);
+  const tbl=rows=>`<thead><tr><th>Opening</th><th>Games</th><th>W/D/L</th><th>Score</th></tr></thead><tbody>${rows.map(([name,r])=>{
+    const total=r.w+r.d+r.l,pct=parseFloat(winPct(r.w,r.d,r.l)),bad=pct<40,label=name.length>38?name.slice(0,36)+'…':name;
+    return`<tr class="opening-row" onclick="openOpeningDetail('${encodeURIComponent(name)}')">
+      <td title="${name}">${label}</td><td>${total}</td>
+      <td>${wlBar(r.w,r.d,r.l)} <span style="font-size:11px;color:var(--text-muted)">${r.w}/${r.d}/${r.l}</span></td>
+      <td style="color:${bad?'var(--red)':pct>=55?'var(--green)':'var(--text)'}">${pct}%</td>
+    </tr>`;
+  }).join('')}</tbody>`;
+  document.getElementById('openings-white-table').innerHTML=tbl(toRows(wm));
+  document.getElementById('openings-black-table').innerHTML=tbl(toRows(bm));
 }
 
-function openOpeningDetail(encodedName) {
-  const name = decodeURIComponent(encodedName);
-  const games = (openingGamesMap[name] || []).sort((a,b) => b.end_time - a.end_time);
-
-  document.getElementById('opening-detail-title').textContent = name;
-  document.getElementById('opening-detail-badge').textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
-
-  document.getElementById('opening-detail-table').innerHTML = `
-    <thead><tr><th>Date</th><th>Colour</th><th>Opponent</th><th>Result</th><th>Time Control</th><th>Blunders</th><th></th></tr></thead>
-    <tbody>${games.map(g => {
-      const iw = isPlayerWhite(g);
-      const opponent = iw ? g.black?.username : g.white?.username;
-      const outcome = gameOutcome(g);
-      const an = state.analysisResults[g.uuid];
-      return `<tr>
+function openOpeningDetail(enc){
+  const name=decodeURIComponent(enc), games=(openingGamesMap[name]||[]).sort((a,b)=>b.end_time-a.end_time);
+  document.getElementById('opening-detail-title').textContent=name;
+  document.getElementById('opening-detail-badge').textContent=`${games.length} game${games.length!==1?'s':''}`;
+  document.getElementById('opening-detail-table').innerHTML=`
+    <thead><tr><th>Date</th><th>Colour</th><th>Opponent</th><th>Result</th><th>Accuracy</th><th></th></tr></thead>
+    <tbody>${games.map(g=>{
+      const iw=isPlayerWhite(g),opp=iw?g.black?.username:g.white?.username,outcome=gameOutcome(g),an=state.analysisResults[g.uuid];
+      return`<tr>
         <td>${fmtDate(g.end_time)}</td>
         <td><span class="badge badge-${iw?'w':'b'}">${iw?'White':'Black'}</span></td>
-        <td>${opponent||'?'} <span style="color:var(--text-muted);font-size:11px">(${iw?g.black?.rating:g.white?.rating||'?'})</span></td>
+        <td>${opp||'?'} <span style="color:var(--text-muted);font-size:11px">(${iw?g.black?.rating:g.white?.rating||'?'})</span></td>
         <td><span class="badge badge-${outcome}">${outcome}</span></td>
-        <td style="color:var(--text-muted)">${g.time_class||g.time_control||'?'}</td>
-        <td>${an ? `<span class="blunder">${an.blunders}??</span> <span class="mistake">${an.mistakes}?</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td>${an?`<span style="color:${accColor(an.accuracy)}">${an.accuracy}%</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
         <td><button class="btn btn-sm" onclick="openGameInBoard('${g.uuid}')">View</button></td>
       </tr>`;
     }).join('')}</tbody>`;
-
-  document.getElementById('openings-list').style.display = 'none';
+  document.getElementById('openings-list').style.display='none';
   document.getElementById('opening-detail').classList.add('active');
 }
-
-function closeOpeningDetail() {
-  document.getElementById('opening-detail').classList.remove('active');
-  document.getElementById('openings-list').style.display = '';
-}
-
-// ─── Blunders tab ─────────────────────────────────────────────────────────────
-function renderBlunders(games) {
-  const results = games.map(g => ({game:g, analysis:state.analysisResults[g.uuid]})).filter(x => x.analysis);
-  if (!results.length) return;
-  document.getElementById('blunders-empty').style.display = 'none';
-  document.getElementById('blunders-content').style.display = 'block';
-
-  const totalB = results.reduce((s,r)=>s+r.analysis.blunders,0);
-  const totalM = results.reduce((s,r)=>s+r.analysis.mistakes,0);
-  let wB=0,wM=0,wG=0,bB=0,bM=0,bG=0;
-  for (const {analysis:an} of results) {
-    if (an.playerColor==='white') {wB+=an.blunders;wM+=an.mistakes;wG++;} else {bB+=an.blunders;bM+=an.mistakes;bG++;}
-  }
-
-  document.getElementById('blunder-stats').innerHTML = `
-    <div class="stat-card"><div class="value" style="color:var(--red)">${totalB}</div><div class="label">Total Blunders</div><div class="sub">${(totalB/results.length).toFixed(1)} per game</div></div>
-    <div class="stat-card"><div class="value" style="color:var(--yellow)">${totalM}</div><div class="label">Total Mistakes</div></div>
-    <div class="stat-card"><div class="value">${results.length}</div><div class="label">Games Analysed</div></div>`;
-
-  const worst = [...results].sort((a,b)=>b.analysis.blunders-a.analysis.blunders).slice(0,10);
-  document.getElementById('blunder-games-table').innerHTML = `
-    <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th class="blunder">Blunders</th><th class="mistake">Mistakes</th></tr></thead>
-    <tbody>${worst.map(({game:g,analysis:an}) => {
-      const iw = isPlayerWhite(g);
-      const opp = iw ? g.black?.username : g.white?.username;
-      const outcome = gameOutcome(g);
-      return `<tr style="cursor:pointer" onclick="openGameInBoard('${g.uuid}')">
-        <td>${fmtDate(g.end_time)}</td><td>${opp||'?'}</td>
-        <td><span class="badge badge-${outcome}">${outcome}</span></td>
-        <td class="blunder">${an.blunders}</td><td class="mistake">${an.mistakes}</td>
-      </tr>`;
-    }).join('')}</tbody>`;
-
-  document.getElementById('blunder-color-breakdown').innerHTML = `
-    <table>
-      <thead><tr><th>Colour</th><th>Games</th><th>Blunders</th><th>Mistakes</th><th>Avg ??</th></tr></thead>
-      <tbody>
-        <tr><td><span class="badge badge-w">White</span></td><td>${wG}</td><td class="blunder">${wB}</td><td class="mistake">${wM}</td><td>${wG?(wB/wG).toFixed(1):'—'}</td></tr>
-        <tr><td><span class="badge badge-b">Black</span></td><td>${bG}</td><td class="blunder">${bB}</td><td class="mistake">${bM}</td><td>${bG?(bB/bG).toFixed(1):'—'}</td></tr>
-      </tbody>
-    </table>`;
-}
+function closeOpeningDetail(){document.getElementById('opening-detail').classList.remove('active');document.getElementById('openings-list').style.display='';}
 
 // ─── Games tab ────────────────────────────────────────────────────────────────
-function renderGamesTab(games) {
-  document.getElementById('games-empty').style.display = 'none';
-  document.getElementById('games-content').style.display = 'block';
-  const sorted = [...games].sort((a,b) => b.end_time - a.end_time);
-  document.getElementById('games-table').innerHTML = `
-    <thead><tr><th>Date</th><th>White</th><th>Black</th><th>Result</th><th>Time</th><th>Blunders</th><th></th></tr></thead>
-    <tbody>${sorted.map(g => {
-      const iw = isPlayerWhite(g);
-      const outcome = gameOutcome(g);
-      const an = state.analysisResults[g.uuid];
-      return `<tr>
+function renderGamesTab(games){
+  document.getElementById('games-empty').style.display='none';
+  document.getElementById('games-content').style.display='block';
+  const sorted=[...games].sort((a,b)=>b.end_time-a.end_time);
+  document.getElementById('games-table').innerHTML=`
+    <thead><tr><th>Date</th><th>White</th><th>Black</th><th>Result</th><th>Time</th><th>Accuracy</th><th>ACPL</th><th>??/?</th><th></th></tr></thead>
+    <tbody>${sorted.map(g=>{
+      const iw=isPlayerWhite(g),outcome=gameOutcome(g),an=state.analysisResults[g.uuid];
+      return`<tr>
         <td>${fmtDate(g.end_time)}</td>
         <td style="${!iw?'color:var(--text-muted)':''}">${g.white?.username||'?'} <span style="color:var(--text-muted);font-size:11px">(${g.white?.rating||'?'})</span></td>
         <td style="${iw?'color:var(--text-muted)':''}">${g.black?.username||'?'} <span style="color:var(--text-muted);font-size:11px">(${g.black?.rating||'?'})</span></td>
         <td><span class="badge badge-${outcome}">${outcome}</span></td>
         <td style="color:var(--text-muted)">${g.time_class||g.time_control||'?'}</td>
-        <td>${an?`<span class="blunder">${an.blunders}B</span> <span class="mistake">${an.mistakes}M</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+        <td>${an?`<span style="color:${accColor(an.accuracy)};font-weight:600">${an.accuracy}%</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+        <td>${an?`<span style="color:var(--text-muted)">${an.acpl}</span>`:'—'}</td>
+        <td>${an?`<span style="color:var(--red)">${an.blunders}</span>/<span style="color:var(--yellow)">${an.mistakes}</span>`:'—'}</td>
         <td><button class="btn btn-sm" onclick="openGameInBoard('${g.uuid}')">View</button></td>
       </tr>`;
     }).join('')}</tbody>`;
 }
 
-// ─── Board rendering ──────────────────────────────────────────────────────────
-const PIECES = { K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙', k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟' };
+// ─── Board ────────────────────────────────────────────────────────────────────
+const PIECES={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+function fenToBoard(fen){return fen.split(' ')[0].split('/').map(row=>{const r=[];for(const c of row)isNaN(c)?r.push(c):r.push(...Array(parseInt(c)).fill(null));return r;});}
 
-function fenToBoard(fen) {
-  return fen.split(' ')[0].split('/').map(row => {
-    const r = [];
-    for (const c of row) isNaN(c) ? r.push(c) : r.push(...Array(parseInt(c)).fill(null));
-    return r;
-  });
+function renderBoard(fen, highlightSq=null, bestMove=null){
+  const board=fenToBoard(fen), flip=state.boardFlipped;
+  let html='';
+  for(let row=0;row<8;row++){for(let col=0;col<8;col++){
+    const br=flip?7-row:row, bc=flip?7-col:col, piece=board[br][bc];
+    const sq=String.fromCharCode(97+bc)+(8-br);
+    const isLight=(br+bc)%2===0;
+    const isHL=highlightSq&&(sq===highlightSq.slice(0,2)||sq===highlightSq.slice(2,4));
+    const isBest=bestMove&&(sq===bestMove.slice(0,2)||sq===bestMove.slice(2,4));
+    const cls=`sq ${isLight?'light':'dark'}${isHL?' highlight':''}${isBest?' best-move':''}`;
+    const pc=piece?(piece===piece.toUpperCase()?'piece piece-w':'piece piece-b'):'';
+    html+=`<div class="${cls}">${piece?`<span class="${pc}">${PIECES[piece]}</span>`:''}</div>`;
+  }}
+  document.getElementById('chess-board').innerHTML=html;
 }
 
-function renderBoard(fen, highlightSq = null, bestMove = null) {
-  const board = fenToBoard(fen);
-  const flipped = state.boardFlipped;
-  let html = '';
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const br = flipped ? 7-row : row;
-      const bc = flipped ? 7-col : col;
-      const piece = board[br][bc];
-      const sq = String.fromCharCode(97+bc) + (8-br);
-      const isLight = (br+bc) % 2 === 0;
-      const isHL  = highlightSq && (sq === highlightSq.slice(0,2) || sq === highlightSq.slice(2,4));
-      const isBest = bestMove   && (sq === bestMove.slice(0,2)    || sq === bestMove.slice(2,4));
-      const cls = `sq ${isLight?'light':'dark'}${isHL?' highlight':''}${isBest?' best-move':''}`;
-      const pc = piece ? (piece === piece.toUpperCase() ? 'piece piece-w' : 'piece piece-b') : '';
-      html += `<div class="${cls}">${piece?`<span class="${pc}">${PIECES[piece]}</span>`:''}</div>`;
-    }
-  }
-  document.getElementById('chess-board').innerHTML = html;
+function refreshBoard(){
+  if(!state.currentMoves?.length) return;
+  const pos=state.currentMoves[state.currentMoveIndex];
+  const an=state.currentGame?state.analysisResults[state.currentGame.uuid]:null;
+  const md=an?.moveDetails?.find(m=>m.posIndex===state.currentMoveIndex);
+  renderBoard(pos.fen, null, md?.bestMove);
+  updateEvalBar(an?.evalHistory?.[state.currentMoveIndex]);
 }
 
-function openGameInBoard(uuid) {
-  const game = state.games.find(g => g.uuid === uuid);
-  if (!game) return;
+function updateEvalBar(cp){
+  if(cp==null){document.getElementById('eval-label').textContent='';return;}
+  const wp=winP(cp)*100;
+  const blackPct=100-wp, whitePct=wp;
+  document.getElementById('eval-black').style.flex=blackPct.toFixed(1);
+  document.getElementById('eval-white').style.flex=whitePct.toFixed(1);
+  document.getElementById('eval-label').textContent=cpToLabel(cp);
+}
+
+function openGameInBoard(uuid){
+  const game=state.games.find(g=>g.uuid===uuid);
+  if(!game) return;
   switchTab('games');
+  state.currentGame=game;
+  state.currentMoves=parseGameMoves(game.pgn);
+  state.currentMoveIndex=0;
+  state.boardFlipped=!isPlayerWhite(game);
 
-  state.currentGame = game;
-  state.currentMoves = parseGameMoves(game.pgn);
-  state.currentMoveIndex = 0;
-  state.boardFlipped = !isPlayerWhite(game); // flip to player's perspective
+  const an=state.analysisResults[uuid];
 
-  const an = state.analysisResults[uuid];
-  const blunderSet = new Set((an?.blunderMoves||[]).filter(m=>!m.isMistake).map(m=>m.moveIndex));
-  const mistakeSet = new Set((an?.blunderMoves||[]).filter(m=> m.isMistake).map(m=>m.moveIndex));
-
-  let mlHtml = '';
-  for (let i = 1; i < state.currentMoves.length; i++) {
-    const m = state.currentMoves[i];
-    const isB = blunderSet.has(i-1), isM = mistakeSet.has(i-1);
-    if (i%2===1) mlHtml += `<div class="move-row"><span class="move-num">${Math.ceil(i/2)}.</span>`;
-    mlHtml += `<span class="move-token${isB?' blunder-move':isM?' mistake-move':''}" data-idx="${i}" onclick="gotoMove(${i})">${m.san}${isB?'??':isM?'?':''}</span>`;
-    if (i%2===0) mlHtml += '</div>';
+  // Report card
+  const rc=document.getElementById('report-card');
+  if(an){
+    rc.classList.add('visible');
+    const iw=isPlayerWhite(game), opp=iw?game.black?.username:game.white?.username;
+    document.getElementById('rc-row').innerHTML=`
+      <div class="rc-acc"><div class="rc-val" style="color:${accColor(an.accuracy)}">${an.accuracy}%</div><div class="rc-sub">Your Accuracy</div></div>
+      <div class="rc-divider"></div>
+      <div class="rc-stat"><div class="rv">${an.acpl}</div><div class="rl">ACPL</div></div>
+      <div class="rc-divider"></div>
+      <div class="rc-stat"><div class="rv" style="color:var(--red)">${an.blunders}</div><div class="rl">Blunders</div></div>
+      <div class="rc-stat"><div class="rv" style="color:var(--yellow)">${an.mistakes}</div><div class="rl">Mistakes</div></div>
+      <div class="rc-stat"><div class="rv" style="color:var(--mv-inaccuracy)">${an.inaccuracies}</div><div class="rl">Inaccuracies</div></div>
+      <div class="rc-divider"></div>
+      <div class="rc-moves">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Move quality</div>
+        ${clsBar(an)}
+        <div class="rc-legend">${CLS_ORDER.map(c=>{const cnt=an[c+'s']??an[c]??0;return`<div class="rc-leg-item"><span class="rc-dot" style="background:${CLS_COLORS[c]}"></span><span style="color:var(--text-muted)">${c} </span><strong>${cnt}</strong></div>`;}).join('')}</div>
+      </div>`;
+  } else {
+    rc.classList.remove('visible');
   }
-  document.getElementById('move-list').innerHTML = mlHtml;
 
+  // Move list
+  const blunderSet=new Set((an?.moveDetails||[]).filter(m=>m.classification===CLS.blunder).map(m=>m.posIndex));
+  let mlHtml='';
+  for(let i=1;i<state.currentMoves.length;i++){
+    const m=state.currentMoves[i];
+    const md=an?.moveDetails?.find(d=>d.posIndex===i);
+    const cls=md?md.classification:'';
+    const suffix=CLS_SUFFIX[cls]||'';
+    if(i%2===1) mlHtml+=`<div class="move-row"><span class="move-num">${Math.ceil(i/2)}.</span>`;
+    mlHtml+=`<span class="move-token mv-${cls||'good'}" data-idx="${i}" onclick="gotoMove(${i})">${m.san}${suffix?`<span style="font-size:10px">${suffix}</span>`:''}</span>`;
+    if(i%2===0) mlHtml+='</div>';
+  }
+  document.getElementById('move-list').innerHTML=mlHtml;
   renderBoard(state.currentMoves[0].fen);
+  updateEvalBar(an?.evalHistory?.[0]);
   updateBoardInfo();
 }
 
-function gotoMove(idx) {
-  if (!state.currentMoves || idx < 0 || idx >= state.currentMoves.length) return;
-  state.currentMoveIndex = idx;
-  const an = state.currentGame ? state.analysisResults[state.currentGame.uuid] : null;
-  const bi = an?.blunderMoves?.find(m => m.moveIndex === idx-1);
-  renderBoard(state.currentMoves[idx].fen, null, bi?.bestMove);
-  document.querySelectorAll('.move-token').forEach(el => el.classList.remove('active'));
-  const tok = document.querySelector(`.move-token[data-idx="${idx}"]`);
-  if (tok) { tok.classList.add('active'); tok.scrollIntoView({block:'nearest'}); }
-  updateBoardInfo(bi);
+function gotoMove(idx){
+  if(!state.currentMoves||idx<0||idx>=state.currentMoves.length) return;
+  state.currentMoveIndex=idx;
+  const an=state.currentGame?state.analysisResults[state.currentGame.uuid]:null;
+  const md=an?.moveDetails?.find(m=>m.posIndex===idx);
+  renderBoard(state.currentMoves[idx].fen,null,md?.bestMove);
+  updateEvalBar(an?.evalHistory?.[idx]);
+  document.querySelectorAll('.move-token').forEach(el=>el.classList.remove('active'));
+  const tok=document.querySelector(`.move-token[data-idx="${idx}"]`);
+  if(tok){tok.classList.add('active');tok.scrollIntoView({block:'nearest'});}
+  updateBoardInfo(md);
 }
 
-function updateBoardInfo(bi) {
-  const el = document.getElementById('board-info');
-  if (!state.currentGame) return;
-  const pos = state.currentMoves?.[state.currentMoveIndex];
-  if (!pos) return;
-  let info = `Move ${Math.ceil(state.currentMoveIndex/2)}`;
-  if (bi) {
-    info += ` — <span class="${bi.isMistake?'mistake':'blunder'}">${bi.isMistake?'Mistake':'Blunder'}</span> (${bi.swing}cp swing)`;
-    if (bi.bestMove) info += ` — best: <strong>${bi.bestMove}</strong>`;
+function updateBoardInfo(md){
+  const el=document.getElementById('board-info');
+  if(!state.currentGame) return;
+  const idx=state.currentMoveIndex, pos=state.currentMoves?.[idx];
+  if(!pos) return;
+  let info=`Move ${Math.ceil(idx/2)}`;
+  if(md&&md.classification!==CLS.book){
+    const color=CLS_COLORS[md.classification];
+    info+=` — <span style="color:${color};font-weight:600">${md.classification}</span>`;
+    if(md.cploss>0) info+=` (${md.cploss}cp loss)`;
+    if(md.bestMove&&md.classification!==CLS.best) info+=` — best: <strong style="font-family:monospace">${md.bestMove}</strong>`;
   }
-  el.innerHTML = info;
+  el.innerHTML=info;
 }
 
-document.getElementById('btn-start').onclick = () => gotoMove(0);
-document.getElementById('btn-prev').onclick  = () => gotoMove(Math.max(0, state.currentMoveIndex-1));
-document.getElementById('btn-next').onclick  = () => gotoMove(Math.min((state.currentMoves?.length||1)-1, state.currentMoveIndex+1));
-document.getElementById('btn-end').onclick   = () => gotoMove((state.currentMoves?.length||1)-1);
+document.getElementById('btn-start').onclick=()=>gotoMove(0);
+document.getElementById('btn-prev').onclick =()=>gotoMove(Math.max(0,state.currentMoveIndex-1));
+document.getElementById('btn-next').onclick =()=>gotoMove(Math.min((state.currentMoves?.length||1)-1,state.currentMoveIndex+1));
+document.getElementById('btn-end').onclick  =()=>gotoMove((state.currentMoves?.length||1)-1);
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
-function switchTab(name) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+function switchTab(name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById(`tab-${name}`)?.classList.add('active');
   document.querySelector(`nav button[data-tab="${name}"]`)?.classList.add('active');
 }
-document.querySelectorAll('nav button').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
+document.querySelectorAll('nav button').forEach(btn=>{btn.onclick=()=>switchTab(btn.dataset.tab);});
 
 // ─── Load games ───────────────────────────────────────────────────────────────
-document.getElementById('load-btn').onclick = async () => {
-  const username = document.getElementById('username-input').value.trim();
-  if (!username) return;
-  const btn = document.getElementById('load-btn');
-  btn.disabled = true; btn.textContent = 'Loading…';
-  try {
-    state.username = username;
-    document.getElementById('username-display').textContent = `— ${username}`;
-    state.games = await fetchAllGames(
-      username,
-      document.getElementById('time-control-select').value,
-      document.getElementById('date-from').value,
-      document.getElementById('date-to').value
-    );
-    if (!state.games.length) { alert('No games found for those filters.'); return; }
+document.getElementById('load-btn').onclick=async()=>{
+  const username=document.getElementById('username-input').value.trim();
+  if(!username) return;
+  const btn=document.getElementById('load-btn');
+  btn.disabled=true; btn.textContent='Loading…';
+  try{
+    state.username=username;
+    document.getElementById('username-display').textContent=`— ${username}`;
+    state.games=await fetchAllGames(username,document.getElementById('tc-select').value,document.getElementById('date-from').value,document.getElementById('date-to').value);
+    if(!state.games.length){alert('No games found for those filters.');return;}
     renderOverview(state.games);
     renderOpenings(state.games);
     renderGamesTab(state.games);
-    renderBlunders(state.games);
     startAnalysis();
-  } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Load Games'; }
+  }catch(e){alert('Error: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Load Games';}
 };
 
-// ─── Analysis ─────────────────────────────────────────────────────────────────
-async function startAnalysis() {
-  if (state.analysing) return;
-  state.analysing = true;
-  if (!state.sfReady) {
-    document.getElementById('progress-text').textContent = 'Loading Stockfish…';
+// ─── Analysis queue ───────────────────────────────────────────────────────────
+async function startAnalysis(){
+  if(state.analysing) return;
+  state.analysing=true;
+  if(!state.sfReady){
+    document.getElementById('progress-text').textContent='Loading Stockfish…';
     document.getElementById('analysis-bar').classList.add('visible');
-    try { await initStockfish(); }
-    catch(e) {
-      document.getElementById('progress-text').textContent = 'Stockfish failed to load — analysis unavailable';
-      state.analysing = false; return;
+    try{await initStockfish();}
+    catch(e){
+      document.getElementById('progress-text').textContent='Stockfish failed to load — analysis unavailable';
+      state.analysing=false; return;
     }
   }
-  const queue = state.games.filter(g => !state.analysisResults[g.uuid]);
-  if (!queue.length) {
+  const queue=state.games.filter(g=>!state.analysisResults[g.uuid]);
+  if(!queue.length){
     document.getElementById('analysis-bar').classList.remove('visible');
-    state.analysing = false;
-    renderBlunders(state.games); renderPhaseDistribution(); renderBlunderTrend(state.games);
+    state.analysing=false;
+    renderAnalysisTab(state.games);
+    renderPhaseDistribution('phase-display');
+    renderAccuracyChart(state.games);
     return;
   }
   document.getElementById('analysis-bar').classList.add('visible');
-  let done = 0;
-  for (const game of queue) {
-    const opp = isPlayerWhite(game) ? game.black?.username : game.white?.username;
-    document.getElementById('progress-text').textContent = `Analysing ${done+1} of ${queue.length}…`;
-    document.getElementById('analysis-status').textContent = `vs ${opp}`;
-    document.getElementById('progress-fill').style.width = (done/queue.length*100)+'%';
-    document.getElementById('progress-pct').textContent  = Math.round(done/queue.length*100)+'%';
-    const r = await analyseGame(game, state.username);
-    if (r) state.analysisResults[game.uuid] = r;
+  let done=0;
+  for(const game of queue){
+    const opp=isPlayerWhite(game)?game.black?.username:game.white?.username;
+    document.getElementById('progress-text').textContent=`Analysing ${done+1} of ${queue.length}…`;
+    document.getElementById('analysis-status').textContent=`vs ${opp}`;
+    document.getElementById('progress-fill').style.width=(done/queue.length*100)+'%';
+    document.getElementById('progress-pct').textContent=Math.round(done/queue.length*100)+'%';
+    const r=await analyseGameV2(game,state.username);
+    if(r) state.analysisResults[game.uuid]=r;
     done++;
-    if (done%5===0 || done===queue.length) {
-      renderBlunders(state.games); renderPhaseDistribution(); renderBlunderTrend(state.games);
+    if(done%3===0||done===queue.length){
+      renderAnalysisTab(state.games);
+      renderPhaseDistribution('phase-display');
+      renderAccuracyChart(state.games);
+      renderGamesTab(state.games);
+      renderOverview(state.games);
     }
   }
-  document.getElementById('progress-fill').style.width = '100%';
-  document.getElementById('progress-pct').textContent  = '100%';
-  document.getElementById('progress-text').textContent = `Analysis complete — ${queue.length} games`;
-  document.getElementById('analysis-status').textContent = '';
-  setTimeout(() => document.getElementById('analysis-bar').classList.remove('visible'), 3000);
-  renderBlunders(state.games); renderPhaseDistribution(); renderBlunderTrend(state.games); renderGamesTab(state.games);
-  state.analysing = false;
+  document.getElementById('progress-fill').style.width='100%';
+  document.getElementById('progress-pct').textContent='100%';
+  document.getElementById('progress-text').textContent=`Analysis complete — ${queue.length} games`;
+  document.getElementById('analysis-status').textContent='';
+  setTimeout(()=>document.getElementById('analysis-bar').classList.remove('visible'),3000);
+  renderAnalysisTab(state.games);
+  renderGamesTab(state.games);
+  renderOverview(state.games);
+  state.analysing=false;
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 loadSettings();
-const now = new Date(), past = new Date(now - 90*24*60*60*1000);
-document.getElementById('date-to').value   = now.toISOString().split('T')[0];
-document.getElementById('date-from').value = past.toISOString().split('T')[0];
+const _now=new Date(),_past=new Date(_now-90*24*60*60*1000);
+document.getElementById('date-to').value=_now.toISOString().split('T')[0];
+document.getElementById('date-from').value=_past.toISOString().split('T')[0];
 </script>
 </body>
 </html>
