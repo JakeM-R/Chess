@@ -656,19 +656,20 @@ function cpToLabel(cp){
 
 // ─── Analysis v2 ─────────────────────────────────────────────────────────────
 const CLS = {book:'book',best:'best',excellent:'excellent',good:'good',inaccuracy:'inaccuracy',mistake:'mistake',blunder:'blunder'};
-const CLS_THRESHOLDS = {best:0,excellent:10,good:25,inaccuracy:50,mistake:150}; // cploss thresholds
+// Win probability drop thresholds — matches Chess.com's expected-points model
+const CLS_THRESHOLDS = {excellent:0.02, good:0.05, inaccuracy:0.10, mistake:0.20};
 
-function classifyMove(cploss, isPlayedBest){
-  if(isPlayedBest)              return CLS.best;
-  if(cploss<=CLS_THRESHOLDS.excellent) return CLS.excellent;
-  if(cploss<=CLS_THRESHOLDS.good)      return CLS.good;
-  if(cploss<=CLS_THRESHOLDS.inaccuracy)return CLS.inaccuracy;
-  if(cploss<=CLS_THRESHOLDS.mistake)   return CLS.mistake;
+function classifyMove(winPDrop, isPlayedBest){
+  if(isPlayedBest)                        return CLS.best;
+  if(winPDrop<=CLS_THRESHOLDS.excellent)  return CLS.excellent;
+  if(winPDrop<=CLS_THRESHOLDS.good)       return CLS.good;
+  if(winPDrop<=CLS_THRESHOLDS.inaccuracy) return CLS.inaccuracy;
+  if(winPDrop<=CLS_THRESHOLDS.mistake)    return CLS.mistake;
   return CLS.blunder;
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v6_${game.uuid}`;
+  const key=`chess_analysis_v7_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
@@ -721,7 +722,12 @@ async function analyseGameV2(game, username){
     const cploss=Math.max(0,playerPrev-playerCurr);
     const isPlayedBest=!!(prevEv.bestMove&&positions[i].uci&&prevEv.bestMove===positions[i].uci);
 
-    const classification=isBook?CLS.book:classifyMove(cploss,isPlayedBest);
+    // Win probability drop — used for classification (context-sensitive, matches Chess.com)
+    const prevWin=isWhite?winP(evalBefore):1-winP(evalBefore);
+    const currWin=isWhite?winP(evalAfter) :1-winP(evalAfter);
+    const winPDrop=Math.max(0,prevWin-currWin);
+
+    const classification=isBook?CLS.book:classifyMove(winPDrop,isPlayedBest);
 
     if(!isBook){
       totalCpLoss+=cploss;
