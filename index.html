@@ -668,7 +668,7 @@ function classifyMove(cploss, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v3_${game.uuid}`;
+  const key=`chess_analysis_v4_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
