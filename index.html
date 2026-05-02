@@ -668,7 +668,7 @@ function classifyMove(cploss, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v4_${game.uuid}`;
+  const key=`chess_analysis_v5_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
@@ -711,8 +711,9 @@ async function analyseGameV2(game, username){
     const prevEv=evs[i-1], currEv=evs[i];
     if(!prevEv||!currEv) continue;
 
-    const evalBefore=prevEv.score??0;
-    const evalAfter=currEv.score??0;
+    const clampCp=v=>Math.max(-1500,Math.min(1500,v??0));
+    const evalBefore=clampCp(prevEv.score);
+    const evalAfter=clampCp(currEv.score);
     const playerPrev=isWhite?evalBefore:-evalBefore;
     const playerCurr=isWhite?evalAfter :-evalAfter;
     const cploss=Math.max(0,playerPrev-playerCurr);
