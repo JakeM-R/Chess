@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess Analytics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #252836;
+    --border: #2e3248;
+    --accent: #7c6af7;
+    --accent2: #5eead4;
+    --text: #e2e8f0;
+    --text-muted: #6b7280;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
+
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* Header */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--accent); }
+  header h1 span { color: var(--text-muted); font-weight: 400; font-size: 14px; margin-left: 8px; }
+  .header-controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  .header-controls input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 13px; width: 160px; }
+  .header-controls select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+  .header-controls input[type="date"] { width: 140px; }
+  .btn { background: var(--accent); color: #fff; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; }
+  .btn:hover { opacity: .85; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  /* Tabs */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; }
+  nav button { background: none; border: none; color: var(--text-muted); padding: 12px 16px; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all .15s; }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  nav button:hover:not(.active) { color: var(--text); }
+
+  /* Main */
+  main { flex: 1; padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+
+  /* Grid layouts */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+  /* Stat cards */
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .stat-card .label { font-size: 12px; color: var(--text-muted); }
+  .stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Progress bar */
+  #analysis-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: none; }
+  #analysis-bar.visible { display: block; }
+  .progress-track { background: var(--surface2); border-radius: 999px; height: 8px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { background: var(--accent); height: 100%; border-radius: 999px; transition: width .3s; width: 0%; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Rating chart */
+  #rating-chart { width: 100%; height: 220px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* Win rate bar */
+  .wl-bar { display: flex; height: 6px; border-radius: 999px; overflow: hidden; min-width: 80px; }
+  .wl-bar .w { background: var(--green); }
+  .wl-bar .d { background: var(--yellow); }
+  .wl-bar .l { background: var(--red); }
+
+  /* Color badge */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-w { background: #ffffff22; color: #fff; }
+  .badge-b { background: #00000044; color: var(--text-muted); border: 1px solid var(--border); }
+  .badge-win { background: #22c55e22; color: var(--green); }
+  .badge-loss { background: #ef444422; color: var(--red); }
+  .badge-draw { background: #f59e0b22; color: var(--yellow); }
+
+  /* Blunder colours */
+  .blunder { color: var(--red); font-weight: 700; }
+  .mistake { color: var(--yellow); font-weight: 600; }
+  .inaccuracy { color: #94a3b8; }
+
+  /* Board panel */
+  .board-panel { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
+  #board-container { width: 400px; height: 400px; position: relative; }
+  .board-grid { display: grid; grid-template-columns: repeat(8, 1fr); width: 400px; height: 400px; border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .sq { display: flex; align-items: center; justify-content: center; font-size: 36px; cursor: pointer; position: relative; transition: background .1s; }
+  .sq.light { background: #f0d9b5; }
+  .sq.dark { background: #b58863; }
+  .sq.highlight { background: #f6f669 !important; opacity: .7; }
+  .sq.best-move { background: #15781b88 !important; }
+  .piece { user-select: none; line-height: 1; }
+  .board-controls { display: flex; gap: 8px; margin-top: 8px; }
+  .board-info { background: var(--surface2); border-radius: 6px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+
+  /* Move list */
+  .move-list { max-height: 360px; overflow-y: auto; font-size: 13px; }
+  .move-row { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 4px; }
+  .move-row:hover { background: var(--surface2); }
+  .move-num { color: var(--text-muted); min-width: 28px; }
+  .move-token { padding: 2px 6px; border-radius: 3px; cursor: pointer; font-family: monospace; }
+  .move-token:hover { background: var(--border); }
+  .move-token.active { background: var(--accent); color: #fff; }
+  .move-token.blunder-move { color: var(--red); }
+  .move-token.mistake-move { color: var(--yellow); }
+
+  /* Game list */
+  .game-row { cursor: pointer; }
+
+  /* Loading / empty states */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .3; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+
+  /* Phase chart */
+  .phase-bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; gap: 2px; margin-top: 8px; }
+  .phase-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; min-width: 30px; }
+
+  .trend-up { color: var(--green); }
+  .trend-down { color: var(--red); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Chess Analytics <span id="username-display"></span></h1>
+    <div class="header-controls">
+      <input type="text" id="username-input" placeholder="Username" value="jakem-r">
+      <select id="time-control-select">
+        <option value="rapid">Rapid</option>
+        <option value="blitz">Blitz</option>
+        <option value="bullet">Bullet</option>
+        <option value="all">All</option>
+      </select>
+      <input type="date" id="date-from" title="From date">
+      <input type="date" id="date-to" title="To date">
+      <button class="btn" id="load-btn">Load Games</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="active" data-tab="overview">Overview</button>
+    <button data-tab="openings">Openings</button>
+    <button data-tab="blunders">Blunders</button>
+    <button data-tab="games">Games</button>
+  </nav>
+
+  <main>
+    <div id="analysis-bar">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:600">Stockfish Analysis Running</span>
+        <span id="analysis-status" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label"><span id="progress-text">Initialising...</span><span id="progress-pct">0%</span></div>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div id="overview-empty" class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <p>Enter a username and click Load Games</p>
+      </div>
+      <div id="overview-content" style="display:none">
+        <div class="grid-4" id="stat-cards"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Rating Over Time</div>
+            <svg id="rating-chart"></svg>
+          </div>
+          <div class="card">
+            <div class="card-title">Results Breakdown</div>
+            <canvas id="results-chart" height="200"></canvas>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Blunder Rate Trend</div>
+            <svg id="blunder-trend-chart" width="100%" height="200"></svg>
+          </div>
+          <div class="card">
+            <div class="card-title">Game Phase Loss Distribution</div>
+            <div id="phase-display"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPENINGS TAB -->
+    <div class="tab-panel" id="tab-openings">
+      <div id="openings-empty" class="empty"><p>Load games to see opening analysis</p></div>
+      <div id="openings-content" style="display:none">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">As White — by frequency</div>
+            <div style="overflow-x:auto"><table id="openings-white-table"></table></div>
+          </div>
+          <div class="card">
+            <div class="card-title">As Black — by frequency</div>
+            <div style="overflow-x:auto"><table id="openings-black-table"></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLUNDERS TAB -->
+    <div class="tab-panel" id="tab-blunders">
+      <div id="blunders-empty" class="empty"><p>Analysis runs after games load. Check back here once the progress bar completes.</p></div>
+      <div id="blunders-content" style="display:none">
+        <div class="grid-3" id="blunder-stats"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Worst Games by Blunders</div>
+            <div style="overflow-x:auto"><table id="blunder-games-table"></table></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Blunders by White vs Black</div>
+            <div id="blunder-color-breakdown"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAMES TAB -->
+    <div class="tab-panel" id="tab-games">
+      <div id="games-empty" class="empty"><p>Load games to browse them</p></div>
+      <div id="games-content" style="display:none">
+        <div class="board-panel">
+          <div>
+            <div class="board-grid" id="chess-board"></div>
+            <div class="board-controls">
+              <button class="btn btn-sm" id="btn-start">⏮</button>
+              <button class="btn btn-sm" id="btn-prev">◀</button>
+              <button class="btn btn-sm" id="btn-next">▶</button>
+              <button class="btn btn-sm" id="btn-end">⏭</button>
+            </div>
+            <div class="board-info" id="board-info">Select a game to view</div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-title">Move List</div>
+              <div class="move-list" id="move-list"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-title">Games</div>
+          <div style="overflow-x:auto"><table id="games-table"></table></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const state = {
+  games: [],
+  analysisResults: {}, // uuid -> {blunders, mistakes, phaseLoss}
+  analysisQueue: [],
+  analysing: false,
+  stockfish: null,
+  sfReady: false,
+  currentGame: null,
+  currentMoveIndex: 0,
+  currentMoves: [],
+  currentChess: null,
+};
+
+// ─── Stockfish WASM ──────────────────────────────────────────────────────────
+function initStockfish() {
+  return new Promise(resolve => {
+    const sf = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+    let ready = false;
+    sf.onmessage = e => {
+      if (!ready && (e.data === 'readyok' || e.data === 'uciok')) {
+        if (e.data === 'uciok') sf.postMessage('isready');
+        if (e.data === 'readyok') { ready = true; state.sfReady = true; resolve(sf); }
+      }
+    };
+    sf.postMessage('uci');
+    state.stockfish = sf;
+  });
+}
+
+function evaluatePosition(fen, depth = 14) {
+  return new Promise(resolve => {
+    if (!state.stockfish) return resolve(null);
+    const sf = state.stockfish;
+    let bestScore = null;
+    const handler = e => {
+      const d = e.data;
+      if (typeof d !== 'string') return;
+      const infoMatch = d.match(/info depth (\d+).*score (cp|mate) (-?\d+)/);
+      if (infoMatch) {
+        const dep = parseInt(infoMatch[1]);
+        const type = infoMatch[2];
+        const val = parseInt(infoMatch[3]);
+        if (dep === depth) bestScore = type === 'mate' ? (val > 0 ? 100000 : -100000) : val;
+      }
+      if (d.startsWith('bestmove')) {
+        sf.removeEventListener('message', handler);
+        const bmMatch = d.match(/bestmove (\S+)/);
+        resolve({ score: bestScore, bestMove: bmMatch ? bmMatch[1] : null });
+      }
+    };
+    sf.addEventListener('message', handler);
+    sf.postMessage(`position fen ${fen}`);
+    sf.postMessage(`go depth ${depth}`);
+  });
+}
+
+// ─── Chess.com API ───────────────────────────────────────────────────────────
+async function fetchAllGames(username, timeControl, dateFrom, dateTo) {
+  const archivesRes = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+  if (!archivesRes.ok) throw new Error('Player not found');
+  const { archives } = await archivesRes.json();
+
+  let from = dateFrom ? new Date(dateFrom) : null;
+  let to = dateTo ? new Date(dateTo) : null;
+
+  // Filter archives to relevant months
+  const filtered = archives.filter(url => {
+    const parts = url.split('/');
+    const y = parseInt(parts[parts.length - 2]);
+    const m = parseInt(parts[parts.length - 1]);
+    const archDate = new Date(y, m - 1);
+    if (from && archDate < new Date(from.getFullYear(), from.getMonth())) return false;
+    if (to && archDate > new Date(to.getFullYear(), to.getMonth())) return false;
+    return true;
+  });
+
+  let allGames = [];
+  for (const url of filtered) {
+    const res = await fetch(url);
+    if (!res.ok) continue;
+    const { games } = await res.json();
+    allGames = allGames.concat(games);
+  }
+
+  // Filter by time control
+  if (timeControl !== 'all') {
+    allGames = allGames.filter(g => {
+      const tc = (g.time_class || '').toLowerCase();
+      return tc === timeControl;
+    });
+  }
+
+  // Filter by date range
+  if (from || to) {
+    allGames = allGames.filter(g => {
+      const d = new Date(g.end_time * 1000);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+  }
+
+  return allGames;
+}
+
+// ─── PGN / Opening parsing ───────────────────────────────────────────────────
+function extractMoves(pgn) {
+  // Remove headers and annotations
+  const cleaned = pgn.replace(/\[.*?\]\s*/g, '').replace(/\{[^}]*\}/g, '').replace(/\$\d+/g, '').trim();
+  const tokens = cleaned.split(/\s+/).filter(t => t && !t.match(/^\d+\./) && !t.match(/^(1-0|0-1|1\/2-1\/2|\*)$/));
+  return tokens;
+}
+
+function getOpeningKey(pgn, maxMoves = 5) {
+  const moves = extractMoves(pgn);
+  return moves.slice(0, maxMoves * 2).join(' ') || 'Unknown';
+}
+
+function getOpeningName(pgn) {
+  // Extract ECO/opening name from PGN headers
+  const ecoMatch = pgn.match(/\[ECO "([^"]+)"\]/);
+  const openingMatch = pgn.match(/\[Opening "([^"]+)"\]/);
+  const variationMatch = pgn.match(/\[Variation "([^"]+)"\]/);
+  if (openingMatch) {
+    return openingMatch[1] + (variationMatch ? ': ' + variationMatch[1] : '');
+  }
+  if (ecoMatch) return 'ECO ' + ecoMatch[1];
+  return getOpeningKey(pgn, 3);
+}
+
+function parseGameMoves(pgn) {
+  const chess = new Chess();
+  const moves = extractMoves(pgn);
+  const positions = [];
+  positions.push({ fen: chess.fen(), san: null, moveNum: 0 });
+  for (const san of moves) {
+    try {
+      const move = chess.move(san, { sloppy: true });
+      if (!move) break;
+      positions.push({ fen: chess.fen(), san: move.san, moveNum: positions.length });
+    } catch { break; }
+  }
+  return positions;
+}
+
+// ─── Analysis engine ─────────────────────────────────────────────────────────
+async function analyseGame(game, username) {
+  const cacheKey = `chess_analysis_${game.uuid}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    try { return JSON.parse(cached); } catch {}
+  }
+
+  const positions = parseGameMoves(game.pgn);
+  if (positions.length < 3) return null;
+
+  const isWhite = (game.white?.username || '').toLowerCase() === username.toLowerCase();
+  const playerColor = isWhite ? 'white' : 'black';
+
+  let blunders = 0, mistakes = 0, inaccuracies = 0;
+  let phaseLoss = null;
+  let blunderMoves = [];
+  let prevScore = null;
+
+  for (let i = 0; i < positions.length - 1; i++) {
+    const pos = positions[i];
+    const result = await evaluatePosition(pos.fen, 14);
+    if (!result) continue;
+
+    let score = result.score;
+    // Normalise: positive = good for white
+    const moveIsPlayerMove = (isWhite && i % 2 === 0) || (!isWhite && i % 2 === 1);
+
+    if (prevScore !== null && moveIsPlayerMove) {
+      // Eval from player's perspective: if white, positive is good; if black, negative is good
+      const playerPrev = isWhite ? prevScore : -prevScore;
+      const playerCurr = isWhite ? score : -score;
+      const swing = playerPrev - playerCurr;
+
+      if (swing >= 150) {
+        blunders++;
+        blunderMoves.push({ moveIndex: i, san: positions[i + 1]?.san, swing, fen: pos.fen, bestMove: result.bestMove });
+        if (!phaseLoss) {
+          const moveNum = Math.ceil(i / 2);
+          phaseLoss = moveNum < 10 ? 'opening' : moveNum <= 30 ? 'middlegame' : 'endgame';
+        }
+      } else if (swing >= 50) {
+        mistakes++;
+        blunderMoves.push({ moveIndex: i, san: positions[i + 1]?.san, swing, fen: pos.fen, bestMove: result.bestMove, isMistake: true });
+      } else if (swing >= 20) {
+        inaccuracies++;
+      }
+    }
+    prevScore = score;
+  }
+
+  const result = { blunders, mistakes, inaccuracies, phaseLoss, blunderMoves, playerColor };
+  localStorage.setItem(cacheKey, JSON.stringify(result));
+  return result;
+}
+
+// ─── Rendering helpers ───────────────────────────────────────────────────────
+function wlBar(w, d, l) {
+  const total = w + d + l || 1;
+  return `<div class="wl-bar">
+    <div class="w" style="width:${w/total*100}%"></div>
+    <div class="d" style="width:${d/total*100}%"></div>
+    <div class="l" style="width:${l/total*100}%"></div>
+  </div>`;
+}
+
+function winPct(w, d, l) {
+  const total = w + d + l || 1;
+  return ((w + d * 0.5) / total * 100).toFixed(0) + '%';
+}
+
+function formatDate(ts) {
+  return new Date(ts * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+}
+
+// ─── SVG Rating Chart ─────────────────────────────────────────────────────────
+function drawRatingChart(games, username) {
+  const points = games
+    .map(g => {
+      const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
+      return {
+        ts: g.end_time,
+        rating: isWhite ? g.white?.rating : g.black?.rating,
+      };
+    })
+    .filter(p => p.rating)
+    .sort((a, b) => a.ts - b.ts);
+
+  if (points.length < 2) return;
+
+  const svg = document.getElementById('rating-chart');
+  const W = svg.clientWidth || 500, H = 220;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const pad = { top: 16, right: 16, bottom: 28, left: 44 };
+  const iW = W - pad.left - pad.right;
+  const iH = H - pad.top - pad.bottom;
+
+  const ratings = points.map(p => p.rating);
+  const minR = Math.min(...ratings) - 20;
+  const maxR = Math.max(...ratings) + 20;
+  const minT = points[0].ts, maxT = points[points.length - 1].ts;
+
+  const xScale = t => pad.left + (t - minT) / (maxT - minT || 1) * iW;
+  const yScale = r => pad.top + (1 - (r - minR) / (maxR - minR || 1)) * iH;
+
+  // Grid lines
+  let html = '';
+  const steps = 5;
+  for (let i = 0; i <= steps; i++) {
+    const r = minR + (maxR - minR) * i / steps;
+    const y = yScale(r);
+    html += `<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
+    html += `<text x="${pad.left - 6}" y="${y + 4}" text-anchor="end" fill="#6b7280" font-size="11">${Math.round(r)}</text>`;
+  }
+
+  // Line path
+  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(p.ts).toFixed(1)},${yScale(p.rating).toFixed(1)}`).join(' ');
+  html += `<path d="${d}" fill="none" stroke="#7c6af7" stroke-width="2"/>`;
+
+  // Latest rating dot + label
+  const last = points[points.length - 1];
+  html += `<circle cx="${xScale(last.ts)}" cy="${yScale(last.rating)}" r="4" fill="#7c6af7"/>`;
+  html += `<text x="${xScale(last.ts) - 6}" y="${yScale(last.rating) - 8}" fill="#e2e8f0" font-size="11">${last.rating}</text>`;
+
+  svg.innerHTML = html;
+}
+
+// ─── Overview ────────────────────────────────────────────────────────────────
+function renderOverview(games, username) {
+  document.getElementById('overview-empty').style.display = 'none';
+  document.getElementById('overview-content').style.display = 'block';
+
+  let wins = 0, losses = 0, draws = 0;
+  let ratingSum = 0, ratingCount = 0;
+
+  for (const g of games) {
+    const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
+    const result = isWhite ? g.white?.result : g.black?.result;
+    const rating = isWhite ? g.white?.rating : g.black?.rating;
+    if (rating) { ratingSum += rating; ratingCount++; }
+    if (result === 'win') wins++;
+    else if (['checkmated', 'resigned', 'timeout', 'abandoned'].includes(result)) losses++;
+    else draws++;
+  }
+
+  const avgRating = ratingCount ? Math.round(ratingSum / ratingCount) : '—';
+  const latestRating = (() => {
+    const sorted = [...games].sort((a, b) => b.end_time - a.end_time);
+    const g = sorted[0];
+    if (!g) return '—';
+    const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
+    return (isWhite ? g.white?.rating : g.black?.rating) || '—';
+  })();
+
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card"><div class="value" style="color:var(--accent)">${games.length}</div><div class="label">Games Loaded</div></div>
+    <div class="stat-card"><div class="value" style="color:var(--green)">${wins}</div><div class="label">Wins</div><div class="sub">${winPct(wins, draws, losses)} score</div></div>
+    <div class="stat-card"><div class="value" style="color:var(--red)">${losses}</div><div class="label">Losses</div></div>
+    <div class="stat-card"><div class="value">${latestRating}</div><div class="label">Current Rating</div><div class="sub">Avg ${avgRating}</div></div>
+  `;
+
+  // Results donut (SVG-based pie)
+  const canvas = document.getElementById('results-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 40 || 300;
+  canvas.width = W; canvas.height = 200;
+  const cx = W / 2, cy = 85, r = 70;
+  const total = wins + draws + losses || 1;
+  const slices = [
+    { val: wins, color: '#22c55e', label: `Win ${(wins/total*100).toFixed(0)}%` },
+    { val: draws, color: '#f59e0b', label: `Draw ${(draws/total*100).toFixed(0)}%` },
+    { val: losses, color: '#ef4444', label: `Loss ${(losses/total*100).toFixed(0)}%` },
+  ];
+  let start = -Math.PI / 2;
+  for (const s of slices) {
+    const angle = (s.val / total) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.closePath(); ctx.fillStyle = s.color; ctx.fill();
+    start += angle;
+  }
+  // Legend
+  slices.forEach((s, i) => {
+    ctx.fillStyle = s.color;
+    ctx.fillRect(20, 165 + i * 0, 12, 12); // this won't look right in a row, do row
+  });
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  let lx = 20;
+  slices.forEach(s => {
+    ctx.fillStyle = s.color;
+    ctx.fillRect(lx, 168, 10, 10);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText(s.label, lx + 14, 178);
+    lx += ctx.measureText(s.label).width + 30;
+  });
+
+  drawRatingChart(games, username);
+  renderPhaseDistribution(games, username);
+  renderBlunderTrend(games, username);
+}
+
+function renderPhaseDistribution(games, username) {
+  const el = document.getElementById('phase-display');
+  const results = Object.values(state.analysisResults);
+  if (!results.length) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Run analysis to see phase data</p>';
+    return;
+  }
+
+  const counts = { opening: 0, middlegame: 0, endgame: 0, unknown: 0 };
+  for (const r of results) {
+    const key = r.phaseLoss || 'unknown';
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  const total = results.length || 1;
+
+  el.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="phase-bar">
+        <div class="phase-seg" style="background:var(--red);width:${counts.opening/total*100}%">${counts.opening > 0 ? counts.opening : ''}</div>
+        <div class="phase-seg" style="background:var(--yellow);width:${counts.middlegame/total*100}%">${counts.middlegame > 0 ? counts.middlegame : ''}</div>
+        <div class="phase-seg" style="background:var(--blue);width:${counts.endgame/total*100}%">${counts.endgame > 0 ? counts.endgame : ''}</div>
+        <div class="phase-seg" style="background:var(--surface2);width:${counts.unknown/total*100}%;color:var(--text-muted)">${counts.unknown > 0 ? counts.unknown : ''}</div>
+      </div>
+    </div>
+    <table>
+      <tr><td><span style="color:var(--red)">■</span> Opening (&lt;10 moves)</td><td>${counts.opening} <span style="color:var(--text-muted)">(${(counts.opening/total*100).toFixed(0)}%)</span></td></tr>
+      <tr><td><span style="color:var(--yellow)">■</span> Middlegame (10–30)</td><td>${counts.middlegame} <span style="color:var(--text-muted)">(${(counts.middlegame/total*100).toFixed(0)}%)</span></td></tr>
+      <tr><td><span style="color:var(--blue)">■</span> Endgame (&gt;30 moves)</td><td>${counts.endgame} <span style="color:var(--text-muted)">(${(counts.endgame/total*100).toFixed(0)}%)</span></td></tr>
+    </table>
+  `;
+}
+
+function renderBlunderTrend(games, username) {
+  const svg = document.getElementById('blunder-trend-chart');
+  const analysed = games
+    .filter(g => state.analysisResults[g.uuid])
+    .sort((a, b) => a.end_time - b.end_time);
+  if (analysed.length < 2) {
+    svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#6b7280" font-size="13">Analysis pending...</text>`;
+    return;
+  }
+
+  const W = svg.clientWidth || 500, H = 200;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const pad = { top: 16, right: 16, bottom: 28, left: 36 };
+  const iW = W - pad.left - pad.right, iH = H - pad.top - pad.bottom;
+
+  const points = analysed.map((g, i) => ({
+    x: i,
+    blunders: state.analysisResults[g.uuid].blunders,
+    mistakes: state.analysisResults[g.uuid].mistakes,
+  }));
+
+  const maxY = Math.max(...points.map(p => p.blunders + p.mistakes), 1);
+  const xScale = i => pad.left + i / (points.length - 1) * iW;
+  const yScale = v => pad.top + (1 - v / maxY) * iH;
+
+  let html = '';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + i / 4 * iH;
+    html += `<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
+    html += `<text x="${pad.left - 4}" y="${y + 4}" text-anchor="end" fill="#6b7280" font-size="10">${Math.round(maxY * (1 - i/4))}</text>`;
+  }
+
+  // Blunder line
+  const bd = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(i).toFixed(1)},${yScale(p.blunders).toFixed(1)}`).join(' ');
+  html += `<path d="${bd}" fill="none" stroke="#ef4444" stroke-width="2"/>`;
+
+  // Mistake line
+  const md = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(i).toFixed(1)},${yScale(p.mistakes).toFixed(1)}`).join(' ');
+  html += `<path d="${md}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>`;
+
+  // Legend
+  html += `<rect x="${pad.left}" y="${H-16}" width="10" height="3" fill="#ef4444"/>`;
+  html += `<text x="${pad.left + 14}" y="${H-12}" fill="#e2e8f0" font-size="11">Blunders</text>`;
+  html += `<rect x="${pad.left + 80}" y="${H-16}" width="10" height="3" fill="#f59e0b"/>`;
+  html += `<text x="${pad.left + 94}" y="${H-12}" fill="#e2e8f0" font-size="11">Mistakes</text>`;
+
+  svg.innerHTML = html;
+}
+
+// ─── Openings ────────────────────────────────────────────────────────────────
+function renderOpenings(games, username) {
+  document.getElementById('openings-empty').style.display = 'none';
+  document.getElementById('openings-content').style.display = 'block';
+
+  const whiteMap = {}, blackMap = {};
+
+  for (const g of games) {
+    const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
+    const result = isWhite ? g.white?.result : g.black?.result;
+    const outcome = result === 'win' ? 'w' : ['checkmated','resigned','timeout','abandoned'].includes(result) ? 'l' : 'd';
+    const name = getOpeningName(g.pgn);
+    const map = isWhite ? whiteMap : blackMap;
+    if (!map[name]) map[name] = { w: 0, d: 0, l: 0 };
+    map[name][outcome]++;
+  }
+
+  const toRows = map => Object.entries(map)
+    .sort((a, b) => (b[1].w + b[1].d + b[1].l) - (a[1].w + a[1].d + a[1].l))
+    .slice(0, 20);
+
+  const tableHtml = rows => `
+    <thead><tr><th>Opening</th><th>Games</th><th>W/D/L</th><th>Score</th></tr></thead>
+    <tbody>${rows.map(([name, r]) => {
+      const total = r.w + r.d + r.l;
+      const pct = parseFloat(winPct(r.w, r.d, r.l));
+      const worst = pct < 40;
+      return `<tr>
+        <td style="${worst ? 'color:var(--red)' : ''}" title="${name}">${name.length > 40 ? name.slice(0,38)+'…' : name}</td>
+        <td>${total}</td>
+        <td>${wlBar(r.w, r.d, r.l)} <span style="font-size:11px;color:var(--text-muted)">${r.w}/${r.d}/${r.l}</span></td>
+        <td style="color:${worst ? 'var(--red)' : pct >= 55 ? 'var(--green)' : 'var(--text)'}">${pct}%</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+
+  document.getElementById('openings-white-table').innerHTML = tableHtml(toRows(whiteMap));
+  document.getElementById('openings-black-table').innerHTML = tableHtml(toRows(blackMap));
+}
+
+// ─── Blunders tab ────────────────────────────────────────────────────────────
+function renderBlunders(games, username) {
+  const results = games.map(g => ({ game: g, analysis: state.analysisResults[g.uuid] })).filter(x => x.analysis);
+  if (!results.length) return;
+
+  document.getElementById('blunders-empty').style.display = 'none';
+  document.getElementById('blunders-content').style.display = 'block';
+
+  const totalB = results.reduce((s, r) => s + r.analysis.blunders, 0);
+  const totalM = results.reduce((s, r) => s + r.analysis.mistakes, 0);
+  const avgB = (totalB / results.length).toFixed(1);
+
+  let whiteB = 0, whiteM = 0, whiteGames = 0;
+  let blackB = 0, blackM = 0, blackGames = 0;
+  for (const { analysis } of results) {
+    if (analysis.playerColor === 'white') { whiteB += analysis.blunders; whiteM += analysis.mistakes; whiteGames++; }
+    else { blackB += analysis.blunders; blackM += analysis.mistakes; blackGames++; }
+  }
+
+  document.getElementById('blunder-stats').innerHTML = `
+    <div class="stat-card"><div class="value" style="color:var(--red)">${totalB}</div><div class="label">Total Blunders</div><div class="sub">${avgB} per game avg</div></div>
+    <div class="stat-card"><div class="value" style="color:var(--yellow)">${totalM}</div><div class="label">Total Mistakes</div></div>
+    <div class="stat-card"><div class="value">${results.length}</div><div class="label">Games Analysed</div></div>
+  `;
+
+  // Worst games
+  const worst = [...results].sort((a, b) => b.analysis.blunders - a.analysis.blunders).slice(0, 10);
+  document.getElementById('blunder-games-table').innerHTML = `
+    <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th class="blunder">Blunders</th><th class="mistake">Mistakes</th></tr></thead>
+    <tbody>${worst.map(({ game: g, analysis }) => {
+      const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
+      const opponent = isWhite ? g.black?.username : g.white?.username;
+      const result = isWhite ? g.white?.result : g.black?.result;
+      const outcome = result === 'win' ? 'win' : ['checkmated','resigned','timeout','abandoned'].includes(result) ? 'loss' : 'draw';
+      return `<tr class="game-row" data-uuid="${g.uuid}" onclick="openGameInBoard('${g.uuid}')">
+        <td>${formatDate(g.end_time)}</td>
+        <td>${opponent || '?'}</td>
+        <td><span class="badge badge-${outcome}">${outcome}</span></td>
+        <td class="blunder">${analysis.blunders}</td>
+        <td class="mistake">${analysis.mistakes}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+
+  // Color breakdown
+  document.getElementById('blunder-color-breakdown').innerHTML = `
+    <table>
+      <thead><tr><th>Colour</th><th>Games</th><th>Blunders</th><th>Mistakes</th><th>Avg Blunders</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-w">White</span></td>
+          <td>${whiteGames}</td>
+          <td class="blunder">${whiteB}</td>
+          <td class="mistake">${whiteM}</td>
+          <td>${whiteGames ? (whiteB/whiteGames).toFixed(1) : '—'}</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-b">Black</span></td>
+          <td>${blackGames}</td>
+          <td class="blunder">${blackB}</td>
+          <td class="mistake">${blackM}</td>
+          <td>${blackGames ? (blackB/blackGames).toFixed(1) : '—'}</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+// ─── Games tab ───────────────────────────────────────────────────────────────
+function renderGamesTab(games, username) {
+  document.getElementById('games-empty').style.display = 'none';
+  document.getElementById('games-content').style.display = 'block';
+
+  const sorted = [...games].sort((a, b) => b.end_time - a.end_time);
+
+  const analysis = uuid => state.analysisResults[uuid];
+
+  document.getElementById('games-table').innerHTML = `
+    <thead><tr><th>Date</th><th>White</th><th>Black</th><th>Result</th><th>Time Control</th><th>Blunders</th><th>View</th></tr></thead>
+    <tbody>${sorted.map(g => {
+      const isWhite = (g.white?.username || '').toLowerCase() === username.toLowerCase();
+      const result = isWhite ? g.white?.result : g.black?.result;
+      const outcome = result === 'win' ? 'win' : ['checkmated','resigned','timeout','abandoned'].includes(result) ? 'loss' : 'draw';
+      const an = analysis(g.uuid);
+      return `<tr>
+        <td>${formatDate(g.end_time)}</td>
+        <td style="${!isWhite ? 'color:var(--text-muted)' : ''}">${g.white?.username || '?'} <span style="color:var(--text-muted);font-size:11px">(${g.white?.rating || '?'})</span></td>
+        <td style="${isWhite ? 'color:var(--text-muted)' : ''}">${g.black?.username || '?'} <span style="color:var(--text-muted);font-size:11px">(${g.black?.rating || '?'})</span></td>
+        <td><span class="badge badge-${outcome}">${outcome}</span></td>
+        <td style="color:var(--text-muted)">${g.time_control || g.time_class || '?'}</td>
+        <td>${an ? `<span class="blunder">${an.blunders}B</span> <span class="mistake">${an.mistakes}M</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td><button class="btn btn-sm" onclick="openGameInBoard('${g.uuid}')">View</button></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+// ─── Board ────────────────────────────────────────────────────────────────────
+const PIECES = {
+  K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙',
+  k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟',
+};
+
+function fenToBoard(fen) {
+  const rows = fen.split(' ')[0].split('/');
+  const board = [];
+  for (const row of rows) {
+    const r = [];
+    for (const c of row) {
+      if (isNaN(c)) r.push(c);
+      else for (let i = 0; i < parseInt(c); i++) r.push(null);
+    }
+    board.push(r);
+  }
+  return board;
+}
+
+function renderBoard(fen, highlightSq = null, bestMove = null) {
+  const board = fenToBoard(fen);
+  const container = document.getElementById('chess-board');
+  let html = '';
+
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const isLight = (row + col) % 2 === 0;
+      const piece = board[row][col];
+      const sq = String.fromCharCode(97 + col) + (8 - row);
+      const isHighlight = highlightSq && (sq === highlightSq.slice(0, 2) || sq === highlightSq.slice(2, 4));
+      const isBest = bestMove && (sq === bestMove.slice(0, 2) || sq === bestMove.slice(2, 4));
+      const cls = `sq ${isLight ? 'light' : 'dark'}${isHighlight ? ' highlight' : ''}${isBest ? ' best-move' : ''}`;
+      html += `<div class="${cls}" data-sq="${sq}">${piece ? `<span class="piece">${PIECES[piece] || piece}</span>` : ''}</div>`;
+    }
+  }
+  container.innerHTML = html;
+}
+
+function openGameInBoard(uuid) {
+  const game = state.games.find(g => g.uuid === uuid);
+  if (!game) return;
+
+  // Switch to games tab
+  switchTab('games');
+
+  state.currentGame = game;
+  state.currentMoves = parseGameMoves(game.pgn);
+  state.currentMoveIndex = 0;
+
+  const analysis = state.analysisResults[uuid];
+  const blunderIdxSet = new Set((analysis?.blunderMoves || []).filter(m => !m.isMistake).map(m => m.moveIndex));
+  const mistakeIdxSet = new Set((analysis?.blunderMoves || []).filter(m => m.isMistake).map(m => m.moveIndex));
+
+  // Move list
+  const moveList = document.getElementById('move-list');
+  let mlHtml = '';
+  for (let i = 1; i < state.currentMoves.length; i++) {
+    const m = state.currentMoves[i];
+    const isBlunder = blunderIdxSet.has(i - 1);
+    const isMistake = mistakeIdxSet.has(i - 1);
+    if (i % 2 === 1) mlHtml += `<div class="move-row"><span class="move-num">${Math.ceil(i/2)}.</span>`;
+    mlHtml += `<span class="move-token${isBlunder ? ' blunder-move' : isMistake ? ' mistake-move' : ''}" data-idx="${i}" onclick="gotoMove(${i})">${m.san}${isBlunder ? '??' : isMistake ? '?' : ''}</span>`;
+    if (i % 2 === 0) mlHtml += '</div>';
+  }
+  moveList.innerHTML = mlHtml;
+
+  renderBoard(state.currentMoves[0].fen);
+  updateBoardInfo();
+}
+
+function gotoMove(idx) {
+  if (!state.currentMoves || idx < 0 || idx >= state.currentMoves.length) return;
+  state.currentMoveIndex = idx;
+  const pos = state.currentMoves[idx];
+
+  // Find blunder info for this move
+  const analysis = state.currentGame ? state.analysisResults[state.currentGame.uuid] : null;
+  const blunderInfo = analysis?.blunderMoves?.find(m => m.moveIndex === idx - 1);
+
+  renderBoard(pos.fen, null, blunderInfo?.bestMove);
+
+  // Highlight active move
+  document.querySelectorAll('.move-token').forEach(el => el.classList.remove('active'));
+  const active = document.querySelector(`.move-token[data-idx="${idx}"]`);
+  if (active) { active.classList.add('active'); active.scrollIntoView({ block: 'nearest' }); }
+
+  updateBoardInfo(blunderInfo);
+}
+
+function updateBoardInfo(blunderInfo) {
+  const el = document.getElementById('board-info');
+  if (!state.currentGame) return;
+  const idx = state.currentMoveIndex;
+  const pos = state.currentMoves?.[idx];
+  if (!pos) return;
+
+  let info = `Move ${Math.ceil(idx / 2)} — FEN: <span style="font-size:10px;font-family:monospace">${pos.fen.split(' ')[0]}</span>`;
+  if (blunderInfo) {
+    info += `<br><span class="${blunderInfo.isMistake ? 'mistake' : 'blunder'}">${blunderInfo.isMistake ? 'Mistake' : 'Blunder'}</span> — eval swing ${blunderInfo.swing}cp`;
+    if (blunderInfo.bestMove) info += ` — best: <strong>${blunderInfo.bestMove}</strong>`;
+  }
+  el.innerHTML = info;
+}
+
+document.getElementById('btn-start').onclick = () => gotoMove(0);
+document.getElementById('btn-prev').onclick = () => gotoMove(Math.max(0, state.currentMoveIndex - 1));
+document.getElementById('btn-next').onclick = () => gotoMove(Math.min((state.currentMoves?.length || 1) - 1, state.currentMoveIndex + 1));
+document.getElementById('btn-end').onclick = () => gotoMove((state.currentMoves?.length || 1) - 1);
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${name}`)?.classList.add('active');
+  document.querySelector(`nav button[data-tab="${name}"]`)?.classList.add('active');
+}
+
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.onclick = () => switchTab(btn.dataset.tab);
+});
+
+// ─── Load games ───────────────────────────────────────────────────────────────
+document.getElementById('load-btn').onclick = async () => {
+  const username = document.getElementById('username-input').value.trim();
+  if (!username) return;
+
+  const btn = document.getElementById('load-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+
+  try {
+    const tc = document.getElementById('time-control-select').value;
+    const from = document.getElementById('date-from').value;
+    const to = document.getElementById('date-to').value;
+
+    document.getElementById('username-display').textContent = `— ${username}`;
+    state.games = await fetchAllGames(username, tc, from, to);
+
+    if (!state.games.length) {
+      alert('No games found for those filters.');
+      return;
+    }
+
+    renderOverview(state.games, username);
+    renderOpenings(state.games, username);
+    renderGamesTab(state.games, username);
+    renderBlunders(state.games, username);
+
+    // Start analysis in background
+    startAnalysis(username);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Load Games';
+  }
+};
+
+// ─── Analysis queue ───────────────────────────────────────────────────────────
+async function startAnalysis(username) {
+  if (state.analysing) return;
+  state.analysing = true;
+
+  // Init stockfish if needed
+  if (!state.sfReady) {
+    document.getElementById('progress-text').textContent = 'Loading Stockfish WASM…';
+    document.getElementById('analysis-bar').classList.add('visible');
+    try {
+      await initStockfish();
+    } catch (e) {
+      document.getElementById('progress-text').textContent = 'Stockfish failed to load — analysis unavailable';
+      state.analysing = false;
+      return;
+    }
+  }
+
+  const toAnalyse = state.games.filter(g => !state.analysisResults[g.uuid]);
+  const total = toAnalyse.length;
+
+  if (!total) {
+    document.getElementById('analysis-bar').classList.remove('visible');
+    state.analysing = false;
+    renderBlunders(state.games, username);
+    renderPhaseDistribution(state.games, username);
+    renderBlunderTrend(state.games, username);
+    return;
+  }
+
+  document.getElementById('analysis-bar').classList.add('visible');
+  let done = 0;
+
+  for (const game of toAnalyse) {
+    document.getElementById('progress-text').textContent = `Analysing game ${done + 1} of ${total}…`;
+    document.getElementById('analysis-status').textContent = `vs ${(game.white?.username || '').toLowerCase() === username.toLowerCase() ? game.black?.username : game.white?.username}`;
+    const pct = Math.round(done / total * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+
+    const result = await analyseGame(game, username);
+    if (result) state.analysisResults[game.uuid] = result;
+    done++;
+
+    // Update displays incrementally
+    if (done % 5 === 0 || done === total) {
+      renderBlunders(state.games, username);
+      renderPhaseDistribution(state.games, username);
+      renderBlunderTrend(state.games, username);
+    }
+  }
+
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('progress-pct').textContent = '100%';
+  document.getElementById('progress-text').textContent = `Analysis complete — ${total} games`;
+  document.getElementById('analysis-status').textContent = '';
+  setTimeout(() => document.getElementById('analysis-bar').classList.remove('visible'), 3000);
+
+  renderBlunders(state.games, username);
+  renderPhaseDistribution(state.games, username);
+  renderBlunderTrend(state.games, username);
+  renderGamesTab(state.games, username);
+  state.analysing = false;
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+// Set default date range: last 90 days
+const now = new Date();
+const past = new Date(now - 90 * 24 * 60 * 60 * 1000);
+document.getElementById('date-to').value = now.toISOString().split('T')[0];
+document.getElementById('date-from').value = past.toISOString().split('T')[0];
+</script>
+</body>
+</html>
