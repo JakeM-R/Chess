@@ -882,7 +882,7 @@ function renderOverview(games){
 
   // Rating chart
   const rPoints=games.map(g=>({x:g.end_time,y:isPlayerWhite(g)?g.white?.rating:g.black?.rating})).filter(p=>p.y).sort((a,b)=>a.x-b.x);
-  if(rPoints.length>=2) drawLineChart('rating-chart',rPoints,'var(--accent)','',{showDates:true,showDots:true});
+  if(rPoints.length>=2) drawLineChart('rating-chart',rPoints,'var(--accent)','',{showDates:true});
 
   renderPhaseDistribution('phase-display');
   renderAccuracyChart(games);
@@ -894,7 +894,7 @@ function renderAccuracyChart(games){
   const pts=analysed.map(g=>({x:g.end_time,y:state.analysisResults[g.uuid].accuracy}));
   const maW=pts.length>=10?5:pts.length>=5?3:0;
   drawLineChart('accuracy-chart',pts,'var(--accent)','%',{
-    showDates:true, showDots:true,
+    showDates:true,
     minY:Math.max(0,Math.min(...pts.map(p=>p.y))-5), maxY:100,
     maWindow:maW, maColor:'#ffffff90'
   });
