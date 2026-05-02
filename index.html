@@ -233,7 +233,7 @@
         </div>
         <div class="grid-2">
           <div class="card"><div class="card-title">Accuracy Over Time</div><svg id="accuracy-chart"></svg></div>
-          <div class="card"><div class="card-title">Game Phase Loss</div><div id="phase-display"></div></div>
+          <div class="card"><div class="card-title">Accuracy by Phase</div><div id="phase-display"></div></div>
         </div>
       </div>
     </div>
@@ -280,7 +280,7 @@
             <div style="overflow-x:auto"><table id="worst-games-table"></table></div>
           </div>
           <div class="card">
-            <div class="card-title">Game Phase Loss</div>
+            <div class="card-title">Accuracy by Phase</div>
             <div id="phase-display-2"></div>
           </div>
         </div>
@@ -627,6 +627,19 @@ function moveAccuracy(prevCpWhite, currCpWhite, isWhite){
   const delta=Math.max(0,(prev-curr)*100);
   return Math.max(0, Math.min(100, 103.1668*Math.exp(-0.04354*delta)-3.1669));
 }
+function computePhaseAccuracy(result){
+  const isWhite=result.playerColor==='white';
+  const pa={opening:[],middlegame:[],endgame:[]};
+  for(const d of result.moveDetails){
+    if(d.classification==='book') continue;
+    const mn=Math.ceil((d.moveIndex+1)/2);
+    const phase=mn<=10?'opening':mn<=25?'middlegame':'endgame';
+    pa[phase].push(moveAccuracy(d.evalBefore,d.evalAfter,isWhite));
+  }
+  const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):null;
+  return{opening:avg(pa.opening),middlegame:avg(pa.middlegame),endgame:avg(pa.endgame)};
+}
+
 function cpToLabel(cp){
   if(cp==null) return '';
   if(cp>=10000) return '+M'; if(cp<=-10000) return '-M';
@@ -649,7 +662,14 @@ function classifyMove(cploss, isPlayedBest){
 async function analyseGameV2(game, username){
   const key=`chess_analysis_v2_${game.uuid}`;
   const cached=localStorage.getItem(key);
-  if(cached){try{return JSON.parse(cached);}catch{}}
+  if(cached){try{
+    const r=JSON.parse(cached);
+    if(!r.phaseAccuracy&&r.moveDetails){
+      r.phaseAccuracy=computePhaseAccuracy(r);
+      localStorage.setItem(key,JSON.stringify(r));
+    }
+    return r;
+  }catch{}}
 
   const positions=parseGameMoves(game.pgn);
   if(positions.length<4) return null;
@@ -671,6 +691,7 @@ async function analyseGameV2(game, username){
   let totalCpLoss=0, playerMoveCount=0;
   let phaseLoss=null;
   const accuracies=[];
+  const phaseAccs={opening:[],middlegame:[],endgame:[]};
 
   for(let i=1;i<positions.length;i++){
     // Move from positions[i-1] to positions[i]
@@ -695,10 +716,13 @@ async function analyseGameV2(game, username){
     if(!isBook){
       totalCpLoss+=cploss;
       playerMoveCount++;
-      accuracies.push(moveAccuracy(evalBefore,evalAfter,isWhite));
+      const acc=moveAccuracy(evalBefore,evalAfter,isWhite);
+      accuracies.push(acc);
+      const mn=Math.ceil(i/2);
+      const phase=mn<=10?'opening':mn<=25?'middlegame':'endgame';
+      phaseAccs[phase].push(acc);
       if(!phaseLoss&&classification===CLS.blunder){
-        const mn=Math.ceil(i/2);
-        phaseLoss=mn<10?'opening':mn<=30?'middlegame':'endgame';
+        phaseLoss=phase;
       }
     }
 
@@ -718,6 +742,12 @@ async function analyseGameV2(game, username){
 
   const accuracy=accuracies.length?Math.round(accuracies.reduce((a,b)=>a+b,0)/accuracies.length):100;
   const acpl=playerMoveCount?Math.round(totalCpLoss/playerMoveCount):0;
+  const avgP=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):null;
+  const phaseAccuracy={
+    opening:avgP(phaseAccs.opening),
+    middlegame:avgP(phaseAccs.middlegame),
+    endgame:avgP(phaseAccs.endgame)
+  };
 
   const countBy=cls=>moveDetails.filter(m=>m.classification===cls).length;
 
@@ -728,7 +758,7 @@ async function analyseGameV2(game, username){
     inaccuracies:countBy(CLS.inaccuracy), mistakes:countBy(CLS.mistake),
     blunders:countBy(CLS.blunder),
     totalMoves:moveDetails.length,
-    phaseLoss,
+    phaseLoss, phaseAccuracy,
     playerColor:isWhite?'white':'black',
     moveDetails,
     evalHistory:evs.map(e=>e?.score??0),
@@ -760,28 +790,58 @@ function clsBar(an){
 }
 
 // ─── SVG charts ───────────────────────────────────────────────────────────────
-function drawLineChart(svgId, points, color='var(--accent)', yLabel=''){
+function drawLineChart(svgId, points, color='var(--accent)', yLabel='', opts={}){
   const svg=document.getElementById(svgId);
   if(!svg||points.length<2) return;
   const W=svg.clientWidth||500, H=parseInt(svg.getAttribute('height')||'180');
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  const pad={top:16,right:16,bottom:28,left:44};
+  const showDates=opts.showDates&&points[0]?.x;
+  const pad={top:16,right:16,bottom:showDates?42:28,left:44};
   const iW=W-pad.left-pad.right, iH=H-pad.top-pad.bottom;
   const vals=points.map(p=>p.y);
-  const minV=Math.min(...vals)-5, maxV=Math.max(...vals)+5;
+  const minV=opts.minY??Math.min(...vals)-5;
+  const maxV=opts.maxY??Math.max(...vals)+5;
   const xs=i=>pad.left+i/(points.length-1)*iW;
   const ys=v=>pad.top+(1-(v-minV)/(maxV-minV||1))*iH;
   let html='';
+  // Grid lines + y labels
   for(let i=0;i<=4;i++){
     const v=minV+(maxV-minV)*i/4, y=ys(v);
     html+=`<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="#2e3248" stroke-width="1"/>`;
     html+=`<text x="${pad.left-6}" y="${y+4}" text-anchor="end" fill="#6b7280" font-size="11">${Math.round(v)}${yLabel}</text>`;
   }
+  // X-axis date labels
+  if(showDates){
+    const step=Math.max(1,Math.floor(points.length/6));
+    for(let i=0;i<points.length;i+=step){
+      const d=new Date(points[i].x*1000);
+      const lbl=d.toLocaleDateString('en',{month:'short',year:'2-digit'});
+      html+=`<text x="${xs(i).toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#6b7280" font-size="10">${lbl}</text>`;
+    }
+  }
+  // Main line
   const d=points.map((p,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(p.y).toFixed(1)}`).join(' ');
-  html+=`<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  html+=`<path d="${d}" fill="none" stroke="${color}" stroke-width="2" opacity="0.5"/>`;
+  // Individual dots
+  if(opts.showDots){
+    for(let i=0;i<points.length;i++){
+      html+=`<circle cx="${xs(i).toFixed(1)}" cy="${ys(points[i].y).toFixed(1)}" r="3" fill="${color}" opacity="0.8"/>`;
+    }
+  }
+  // Moving average line
+  if(opts.maWindow&&opts.maWindow>=2&&points.length>=opts.maWindow){
+    const w=opts.maWindow, maColor=opts.maColor||'#ffffff90';
+    const maPath=[];
+    for(let i=w-1;i<points.length;i++){
+      const avg=points.slice(i-w+1,i+1).reduce((s,p)=>s+p.y,0)/w;
+      maPath.push(`${maPath.length===0?'M':'L'}${xs(i).toFixed(1)},${ys(avg).toFixed(1)}`);
+    }
+    html+=`<path d="${maPath.join(' ')}" fill="none" stroke="${maColor}" stroke-width="2.5"/>`;
+  }
+  // Last value dot + label
   const last=points[points.length-1];
-  html+=`<circle cx="${xs(points.length-1)}" cy="${ys(last.y)}" r="4" fill="${color}"/>`;
-  html+=`<text x="${xs(points.length-1)-6}" y="${ys(last.y)-8}" fill="#e2e8f0" font-size="11">${Math.round(last.y)}${yLabel}</text>`;
+  html+=`<circle cx="${xs(points.length-1).toFixed(1)}" cy="${ys(last.y).toFixed(1)}" r="4" fill="${color}"/>`;
+  html+=`<text x="${(xs(points.length-1)-6).toFixed(1)}" y="${(ys(last.y)-8).toFixed(1)}" fill="#e2e8f0" font-size="11">${Math.round(last.y)}${yLabel}</text>`;
   svg.innerHTML=html;
 }
 
@@ -822,7 +882,7 @@ function renderOverview(games){
 
   // Rating chart
   const rPoints=games.map(g=>({x:g.end_time,y:isPlayerWhite(g)?g.white?.rating:g.black?.rating})).filter(p=>p.y).sort((a,b)=>a.x-b.x);
-  if(rPoints.length>=2) drawLineChart('rating-chart',rPoints,'var(--accent)','');
+  if(rPoints.length>=2) drawLineChart('rating-chart',rPoints,'var(--accent)','',{showDates:true,showDots:true});
 
   renderPhaseDistribution('phase-display');
   renderAccuracyChart(games);
@@ -832,28 +892,42 @@ function renderAccuracyChart(games){
   const analysed=games.filter(g=>state.analysisResults[g.uuid]).sort((a,b)=>a.end_time-b.end_time);
   if(analysed.length<2) return;
   const pts=analysed.map(g=>({x:g.end_time,y:state.analysisResults[g.uuid].accuracy}));
-  drawLineChart('accuracy-chart',pts,'var(--accent)','%');
+  const maW=pts.length>=10?5:pts.length>=5?3:0;
+  drawLineChart('accuracy-chart',pts,'var(--accent)','%',{
+    showDates:true, showDots:true,
+    minY:Math.max(0,Math.min(...pts.map(p=>p.y))-5), maxY:100,
+    maWindow:maW, maColor:'#ffffff90'
+  });
 }
 
 function renderPhaseDistribution(elId){
   const el=document.getElementById(elId); if(!el) return;
   const results=Object.values(state.analysisResults);
   if(!results.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13px;padding:8px 0">Analysis pending…</p>';return;}
-  const counts={opening:0,middlegame:0,endgame:0,unknown:0};
-  for(const r of results) counts[r.phaseLoss||'unknown']++;
-  const total=results.length||1;
-  el.innerHTML=`
-    <div class="phase-bar" style="margin-bottom:16px">
-      <div class="phase-seg" style="background:var(--red);width:${counts.opening/total*100}%">${counts.opening||''}</div>
-      <div class="phase-seg" style="background:var(--yellow);width:${counts.middlegame/total*100}%">${counts.middlegame||''}</div>
-      <div class="phase-seg" style="background:var(--blue);width:${counts.endgame/total*100}%">${counts.endgame||''}</div>
-      <div class="phase-seg" style="background:var(--surface2);width:${counts.unknown/total*100}%;color:var(--text-muted)">${counts.unknown||''}</div>
-    </div>
-    <table>
-      <tr><td><span style="color:var(--red)">■</span> Opening (&lt;10 moves)</td><td>${counts.opening} <span style="color:var(--text-muted)">(${(counts.opening/total*100).toFixed(0)}%)</span></td></tr>
-      <tr><td><span style="color:var(--yellow)">■</span> Middlegame (10–30)</td><td>${counts.middlegame} <span style="color:var(--text-muted)">(${(counts.middlegame/total*100).toFixed(0)}%)</span></td></tr>
-      <tr><td><span style="color:var(--blue)">■</span> Endgame (&gt;30 moves)</td><td>${counts.endgame} <span style="color:var(--text-muted)">(${(counts.endgame/total*100).toFixed(0)}%)</span></td></tr>
-    </table>`;
+  const defs=[
+    {key:'opening',  label:'Opening',    sub:'Moves 1–10'},
+    {key:'middlegame',label:'Middlegame',sub:'Moves 11–25'},
+    {key:'endgame',  label:'Endgame',    sub:'Moves 26+'},
+  ];
+  let html='';
+  for(const {key,label,sub} of defs){
+    const vals=results.map(r=>r.phaseAccuracy?.[key]).filter(v=>v!=null);
+    if(!vals.length) continue;
+    const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    const col=accColor(avg);
+    html+=`
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+          <div>
+            <span style="font-size:13px;font-weight:600">${label}</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-left:6px">${sub}</span>
+          </div>
+          <span style="font-size:15px;font-weight:700;color:${col}">${avg}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${avg}%;background:${col}"></div></div>
+      </div>`;
+  }
+  el.innerHTML=html||'<p style="color:var(--text-muted);font-size:13px">No phase data yet</p>';
 }
 
 // ─── Analysis tab ────────────────────────────────────────────────────────────
