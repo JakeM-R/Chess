@@ -412,23 +412,30 @@ async function initStockfish() {
   });
 }
 
-function evaluatePosition(fen, depth=14) {
+function evaluatePosition(fen, moveTime=100) {
   return new Promise(resolve=>{
     if(!state.stockfish) return resolve(null);
-    const sf=state.stockfish; let bestScore=null;
+    const sf=state.stockfish;
+    let bestScore=null, done=false;
+    const finish=(bm)=>{
+      if(done) return; done=true;
+      clearTimeout(guard);
+      sf.removeEventListener('message',handler);
+      resolve({score:bestScore??0, bestMove:bm});
+    };
+    const guard=setTimeout(()=>finish(null), moveTime+4000);
     const handler=e=>{
       if(typeof e.data!=='string') return;
-      const m=e.data.match(/info depth (\d+).*score (cp|mate) (-?\d+)/);
-      if(m&&parseInt(m[1])===depth) bestScore=m[2]==='mate'?(parseInt(m[3])>0?100000:-100000):parseInt(m[3]);
+      const m=e.data.match(/\bscore (cp|mate) (-?\d+)/);
+      if(m) bestScore=m[1]==='mate'?(parseInt(m[2])>0?100000:-100000):parseInt(m[2]);
       if(e.data.startsWith('bestmove')){
-        sf.removeEventListener('message',handler);
         const bm=e.data.match(/bestmove (\S+)/);
-        resolve({score:bestScore??0, bestMove:bm?bm[1]:null});
+        finish(bm?bm[1]:null);
       }
     };
     sf.addEventListener('message',handler);
     sf.postMessage(`position fen ${fen}`);
-    sf.postMessage(`go depth ${depth}`);
+    sf.postMessage(`go movetime ${moveTime}`);
   });
 }
 
@@ -660,7 +667,7 @@ function classifyMove(cploss, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v2_${game.uuid}`;
+  const key=`chess_analysis_v3_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
@@ -681,8 +688,8 @@ async function analyseGameV2(game, username){
   // Evaluate all positions sequentially
   const evs=[];
   for(let i=0;i<positions.length;i++){
-    const depth=(i<bookDepth)?8:14;
-    const ev=await evaluatePosition(positions[i].fen,depth);
+    const mt=i<bookDepth?20:100;
+    const ev=await evaluatePosition(positions[i].fen,mt);
     evs.push(ev);
   }
 
