@@ -1201,22 +1201,30 @@ function switchTab(name){
 document.querySelectorAll('nav button').forEach(btn=>{btn.onclick=()=>switchTab(btn.dataset.tab);});
 
 // ─── Load games ───────────────────────────────────────────────────────────────
-document.getElementById('load-btn').onclick=async()=>{
-  const username=document.getElementById('username-input').value.trim();
-  if(!username) return;
+async function loadGames(username, tc, dateFrom, dateTo, silent=false){
   const btn=document.getElementById('load-btn');
   btn.disabled=true; btn.textContent='Loading…';
   try{
     state.username=username;
     document.getElementById('username-display').textContent=`— ${username}`;
-    state.games=await fetchAllGames(username,document.getElementById('tc-select').value,document.getElementById('date-from').value,document.getElementById('date-to').value);
-    if(!state.games.length){alert('No games found for those filters.');return;}
+    state.games=await fetchAllGames(username, tc, dateFrom, dateTo);
+    if(!state.games.length){
+      if(!silent) alert('No games found for those filters.');
+      return;
+    }
+    localStorage.setItem('chess_last_session', JSON.stringify({username, tc, dateFrom, dateTo}));
     renderOverview(state.games);
     renderOpenings(state.games);
     renderGamesTab(state.games);
     startAnalysis();
-  }catch(e){alert('Error: '+e.message);}
-  finally{btn.disabled=false;btn.textContent='Load Games';}
+  }catch(e){if(!silent) alert('Error: '+e.message);}
+  finally{btn.disabled=false; btn.textContent='Load Games';}
+}
+
+document.getElementById('load-btn').onclick=()=>{
+  const username=document.getElementById('username-input').value.trim();
+  if(!username) return;
+  loadGames(username, document.getElementById('tc-select').value, document.getElementById('date-from').value, document.getElementById('date-to').value);
 };
 
 // ─── Analysis queue ───────────────────────────────────────────────────────────
@@ -1273,9 +1281,21 @@ async function startAnalysis(){
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 loadSettings();
-const _now=new Date(),_past=new Date(_now-90*24*60*60*1000);
-document.getElementById('date-to').value=_now.toISOString().split('T')[0];
-document.getElementById('date-from').value=_past.toISOString().split('T')[0];
+(()=>{
+  const saved=JSON.parse(localStorage.getItem('chess_last_session')||'null');
+  const _now=new Date();
+  if(saved){
+    document.getElementById('username-input').value=saved.username||'';
+    if(saved.tc) document.getElementById('tc-select').value=saved.tc;
+    if(saved.dateFrom) document.getElementById('date-from').value=saved.dateFrom;
+    if(saved.dateTo) document.getElementById('date-to').value=saved.dateTo;
+    loadGames(saved.username, saved.tc||'', saved.dateFrom||'', saved.dateTo||'', true);
+  } else {
+    const _past=new Date(_now-90*24*60*60*1000);
+    document.getElementById('date-to').value=_now.toISOString().split('T')[0];
+    document.getElementById('date-from').value=_past.toISOString().split('T')[0];
+  }
+})();
 </script>
 </body>
 </html>
