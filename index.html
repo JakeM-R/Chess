@@ -412,7 +412,7 @@ async function initStockfish() {
   });
 }
 
-function evaluatePosition(fen, moveTime=100) {
+function evaluatePosition(fen, depth=12) {
   return new Promise(resolve=>{
     if(!state.stockfish) return resolve(null);
     const sf=state.stockfish;
@@ -423,7 +423,8 @@ function evaluatePosition(fen, moveTime=100) {
       sf.removeEventListener('message',handler);
       resolve({score:bestScore??0, bestMove:bm});
     };
-    const guard=setTimeout(()=>finish(null), moveTime+4000);
+    // Safety net: if Stockfish takes >30s on any position, move on
+    const guard=setTimeout(()=>finish(null), 30000);
     const handler=e=>{
       if(typeof e.data!=='string') return;
       const m=e.data.match(/\bscore (cp|mate) (-?\d+)/);
@@ -435,7 +436,7 @@ function evaluatePosition(fen, moveTime=100) {
     };
     sf.addEventListener('message',handler);
     sf.postMessage(`position fen ${fen}`);
-    sf.postMessage(`go movetime ${moveTime}`);
+    sf.postMessage(`go depth ${depth}`);
   });
 }
 
@@ -688,8 +689,7 @@ async function analyseGameV2(game, username){
   // Evaluate all positions sequentially
   const evs=[];
   for(let i=0;i<positions.length;i++){
-    const mt=i<bookDepth?20:100;
-    const ev=await evaluatePosition(positions[i].fen,mt);
+    const ev=await evaluatePosition(positions[i].fen, i<bookDepth?6:12);
     evs.push(ev);
   }
 
