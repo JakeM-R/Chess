@@ -147,13 +147,18 @@
   .detail-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
   .detail-header h2{font-size:20px;font-weight:700}
 
-  /* Analysis tab */
-  .skill-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
-  .skill-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px}
-  .skill-card .sk-val{font-size:32px;font-weight:700;line-height:1}
-  .skill-card .sk-lbl{font-size:12px;color:var(--text-muted);margin-top:4px}
-  .skill-card .sk-bar{height:4px;background:var(--surface2);border-radius:999px;margin-top:10px;overflow:hidden}
-  .skill-card .sk-fill{height:100%;border-radius:999px;background:var(--accent)}
+  /* Report sections */
+  .rpt-section{margin-bottom:24px}
+  .rpt-row{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start}
+  .rpt-right{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+  .rpt-h{font-size:15px;font-weight:700;margin-bottom:12px}
+  .rpt-sub{font-size:13px;font-weight:600;margin:14px 0 3px}
+  .rpt-p{font-size:13px;color:var(--text-muted);line-height:1.55;margin-bottom:4px}
+  .rpt-item{display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border)}
+  .rpt-item:last-child{border-bottom:none}
+  .rpt-badge{font-size:15px;flex-shrink:0}
+  .rpt-score{font-weight:700;margin-left:auto;white-space:nowrap}
+  .rpt-bar-row{margin-bottom:14px}
 
   /* Empty */
   .empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
@@ -263,27 +268,73 @@
     <div class="tab-panel" id="tab-analysis">
       <div id="analysis-empty" class="empty"><p>Analysis runs automatically after games load.</p></div>
       <div id="analysis-content" style="display:none">
-        <div class="skill-grid" id="skill-cards"></div>
+
+        <div class="rpt-section">
+          <div class="rpt-row">
+            <div class="card">
+              <div class="card-title">Overview</div>
+              <div style="display:flex;justify-content:center;padding:8px 0"><svg id="radar-chart"></svg></div>
+            </div>
+            <div class="rpt-right" id="radar-interp"></div>
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-row">
+            <div class="card">
+              <div class="card-title">Win Rate by Colour</div>
+              <canvas id="winrate-chart"></canvas>
+            </div>
+            <div class="rpt-right" id="winrate-interp"></div>
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-row">
+            <div class="card">
+              <div class="card-title">Opening — Avg eval at move 10</div>
+              <svg id="opening-eval-chart" height="140"></svg>
+              <div id="opening-top-table" style="margin-top:16px"></div>
+            </div>
+            <div class="rpt-right" id="opening-interp"></div>
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-row">
+            <div class="card">
+              <div class="card-title">Advantage Capitalization</div>
+              <div id="advcap-chart" style="padding-top:8px"></div>
+            </div>
+            <div class="rpt-right" id="advcap-interp"></div>
+          </div>
+        </div>
+
+        <div class="rpt-section">
+          <div class="rpt-row">
+            <div class="card">
+              <div class="card-title">Resourcefulness</div>
+              <div id="resourcefulness-chart" style="padding-top:8px"></div>
+            </div>
+            <div class="rpt-right" id="resourcefulness-interp"></div>
+          </div>
+        </div>
+
         <div class="grid-2">
           <div class="card">
             <div class="card-title">Move Quality Distribution</div>
             <div id="cls-distribution"></div>
           </div>
           <div class="card">
-            <div class="card-title">Accuracy by Colour</div>
-            <div id="accuracy-by-color"></div>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title">Worst Games</div>
-            <div style="overflow-x:auto"><table id="worst-games-table"></table></div>
-          </div>
-          <div class="card">
             <div class="card-title">Accuracy by Phase</div>
             <div id="phase-display-2"></div>
           </div>
         </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">Worst Games</div>
+          <div style="overflow-x:auto"><table id="worst-games-table"></table></div>
+        </div>
+
       </div>
     </div>
 
@@ -945,70 +996,291 @@ function renderPhaseDistribution(elId){
   el.innerHTML=html||'<p style="color:var(--text-muted);font-size:13px">No phase data yet</p>';
 }
 
+// ─── Report helpers ───────────────────────────────────────────────────────────
+function rptIcon(s){return s>=70?'✅':s>=50?'⚠️':'❌';}
+function rptLabel(s){return s>=80?'Excellent':s>=65?'Good':s>=50?'Fair':'Needs work';}
+function rptBar(pct,color,label){
+  return`<div class="rpt-bar-row">
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px">
+      <span style="color:var(--text-muted)">${label}</span>
+      <span style="font-weight:700;color:${color}">${pct!=null?pct+'%':'—'}</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct??0}%;background:${color}"></div></div>
+  </div>`;}
+
+function drawRadarChart(dims){
+  const svg=document.getElementById('radar-chart'); if(!svg) return;
+  const size=260,cx=size/2,cy=size/2,r=85,n=dims.length;
+  const ang=i=>i/n*Math.PI*2-Math.PI/2;
+  let html='';
+  for(let lv=1;lv<=5;lv++){
+    const rr=r*lv/5;
+    const pts=dims.map((_,i)=>`${(cx+rr*Math.cos(ang(i))).toFixed(1)},${(cy+rr*Math.sin(ang(i))).toFixed(1)}`).join(' ');
+    html+=`<polygon points="${pts}" fill="${lv===5?'var(--surface2)':'none'}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+  dims.forEach((_,i)=>{
+    const a=ang(i);
+    html+=`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
+  });
+  const pts=dims.map((d,i)=>{
+    const rr=r*Math.min(100,Math.max(0,d.value))/100,a=ang(i);
+    return`${(cx+rr*Math.cos(a)).toFixed(1)},${(cy+rr*Math.sin(a)).toFixed(1)}`;
+  }).join(' ');
+  html+=`<polygon points="${pts}" fill="var(--accent)" fill-opacity="0.2" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  dims.forEach((d,i)=>{
+    const a=ang(i),rr=r*Math.min(100,Math.max(0,d.value))/100;
+    const dx=(cx+rr*Math.cos(a)).toFixed(1),dy=(cy+rr*Math.sin(a)).toFixed(1);
+    html+=`<circle cx="${dx}" cy="${dy}" r="13" fill="var(--accent)"/>`;
+    html+=`<text x="${dx}" y="${(parseFloat(dy)+4).toFixed(1)}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${Math.round(d.value)}</text>`;
+    const lx=(cx+(r+26)*Math.cos(a)).toFixed(1),ly=(cy+(r+26)*Math.sin(a)).toFixed(1);
+    const ta=Math.abs(Math.cos(a))<0.15?'middle':Math.cos(a)>0?'start':'end';
+    html+=`<text x="${lx}" y="${(parseFloat(ly)+4).toFixed(1)}" text-anchor="${ta}" fill="var(--text-muted)" font-size="11">${d.label}</text>`;
+  });
+  svg.setAttribute('viewBox',`0 0 ${size} ${size}`);
+  svg.style.cssText='width:100%;max-width:280px;display:block';
+  svg.innerHTML=html;
+}
+
+function drawWinRateChart(groups){
+  const canvas=document.getElementById('winrate-chart'); if(!canvas) return;
+  const W=Math.min(canvas.parentElement.clientWidth-40||400,500);
+  canvas.width=W; canvas.height=270;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,270);
+  const barW=70,chartH=200,topPad=10,leftPad=36;
+  const gap=(W-leftPad-groups.length*barW)/(groups.length+1);
+  ctx.font='10px system-ui'; ctx.fillStyle='#6b7280';
+  for(let v=0;v<=100;v+=20){
+    const y=topPad+chartH*(1-v/100);
+    ctx.textAlign='right'; ctx.fillText(v,leftPad-4,y+3);
+    ctx.fillStyle='#2e3248'; ctx.fillRect(leftPad,y,W-leftPad,0.5); ctx.fillStyle='#6b7280';
+  }
+  groups.forEach((g,gi)=>{
+    const x=leftPad+gap+gi*(barW+gap);
+    [[g.lossPct,'#c0604a'],[g.drawPct,'#7b8094'],[g.winPct,'#4caf9e']].forEach(([pct,color])=>{
+      const h=chartH*pct/100; if(h<1) return;
+      ctx.fillStyle=color; ctx.fillRect(x,topPad+chartH*(1-pct/100-(g.winPct/100)),barW,h);
+    });
+    // Re-draw in order for correct stacking
+    let y=topPad;
+    [[g.lossPct,'#c0604a'],[g.drawPct,'#7b8094'],[g.winPct,'#4caf9e']].forEach(([pct,color])=>{
+      const h=chartH*pct/100; if(h<1){return;}
+      ctx.fillStyle=color; ctx.fillRect(x,y,barW,h);
+      if(pct>=8){ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText(Math.round(pct)+'%',x+barW/2,y+h/2+4);}
+      y+=h;
+    });
+    ctx.fillStyle='#6b7280'; ctx.font='11px system-ui'; ctx.textAlign='center';
+    ctx.fillText(g.label,x+barW/2,topPad+chartH+18);
+  });
+  let lx=leftPad; ctx.font='11px system-ui'; ctx.textAlign='left';
+  [['#4caf9e','win'],['#7b8094','draw'],['#c0604a','lose']].forEach(([c,l])=>{
+    ctx.fillStyle=c; ctx.beginPath(); ctx.arc(lx+5,topPad+chartH+36,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#9ca3af'; ctx.fillText(l,lx+14,topPad+chartH+40); lx+=ctx.measureText(l).width+32;
+  });
+}
+
+function drawOpeningEvalBars(bars){
+  const svg=document.getElementById('opening-eval-chart'); if(!svg) return;
+  const W=svg.parentElement.clientWidth-40||360,H=140;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.style.cssText='width:100%;display:block';
+  const labelW=64,rightPad=16,cx=labelW+(W-labelW-rightPad)/2;
+  const maxV=250,scaleX=v=>cx+v/maxV*(W-labelW-rightPad)/2;
+  const barH=26,rowH=38,topPad=16;
+  let html=`<line x1="${cx}" y1="4" x2="${cx}" y2="${H-4}" stroke="var(--border)" stroke-width="1.5"/>`;
+  // axis value labels
+  [-200,-100,0,100,200].forEach(v=>{
+    const x=scaleX(Math.max(-maxV,Math.min(maxV,v)));
+    html+=`<text x="${x.toFixed(1)}" y="${H-2}" text-anchor="middle" fill="#4b5563" font-size="9">${v>0?'+':''}{${v/100}}</text>`.replace('{','').replace('}','');
+    if(v!==0) html+=`<line x1="${x.toFixed(1)}" y1="4" x2="${x.toFixed(1)}" y2="${H-12}" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,2"/>`;
+  });
+  bars.forEach((b,i)=>{
+    if(b.valuecp==null) return;
+    const y=topPad+i*rowH+barH/2;
+    const xEnd=scaleX(Math.max(-maxV,Math.min(maxV,b.valuecp)));
+    const x1=Math.min(cx,xEnd),x2=Math.max(cx,xEnd);
+    const color=b.valuecp>=0?'#4caf9e':'#c0604a';
+    html+=`<rect x="${x1.toFixed(1)}" y="${(y-barH/2).toFixed(1)}" width="${Math.max(3,x2-x1).toFixed(1)}" height="${barH}" fill="${color}" rx="3" opacity="0.9"/>`;
+    const valText=(b.valuecp>=0?'+':'')+(b.valuecp/100).toFixed(2);
+    const tx=b.valuecp>=0?xEnd+5:xEnd-5, ta=b.valuecp>=0?'start':'end';
+    html+=`<text x="${Math.min(W-rightPad,Math.max(labelW+2,tx)).toFixed(1)}" y="${(y+4).toFixed(1)}" fill="${color}" font-size="12" font-weight="700" text-anchor="${ta}">${valText}</text>`;
+    html+=`<text x="${(labelW-4).toFixed(1)}" y="${(y+4).toFixed(1)}" fill="var(--text-muted)" font-size="12" text-anchor="end">${b.label}</text>`;
+  });
+  svg.innerHTML=html;
+}
+
 // ─── Analysis tab ────────────────────────────────────────────────────────────
 function renderAnalysisTab(games){
-  const results=games.map(g=>({game:g,an:state.analysisResults[g.uuid]})).filter(x=>x.an);
-  if(!results.length) return;
+  const pairs=games.map(g=>({game:g,an:state.analysisResults[g.uuid]})).filter(x=>x.an);
+  if(!pairs.length) return;
   document.getElementById('analysis-empty').style.display='none';
   document.getElementById('analysis-content').style.display='block';
 
-  const totalMoves=results.reduce((s,r)=>s+r.an.totalMoves,0)||1;
-  const totals={books:0,bests:0,excellents:0,goods:0,inaccuracies:0,mistakes:0,blunders:0};
-  let sumAcc=0,sumAcpl=0,wAcc=0,wN=0,bAcc=0,bN=0;
-  for(const{an}of results){
-    for(const k of Object.keys(totals)) totals[k]+=an[k]||0;
-    sumAcc+=an.accuracy; sumAcpl+=an.acpl;
-    if(an.playerColor==='white'){wAcc+=an.accuracy;wN++;}else{bAcc+=an.accuracy;bN++;}
+  // ── Phase accuracy averages ──
+  const avgPhase=key=>{const v=pairs.map(p=>p.an.phaseAccuracy?.[key]).filter(v=>v!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0;};
+  const openingAcc=avgPhase('opening'),tacticAcc=avgPhase('middlegame'),endgameAcc=avgPhase('endgame');
+
+  // ── Advantage cap & resourcefulness ──
+  let advGames=0,advWins=0,resGames=0,resSaved=0;
+  for(const{game,an}of pairs){
+    if(!an.evalHistory?.length) continue;
+    const iw=isPlayerWhite(game);
+    const advs=an.evalHistory.map(e=>iw?e:-e);
+    const mx=Math.max(...advs),mn=Math.min(...advs),out=gameOutcome(game);
+    if(mx>=150){advGames++;if(out==='win')advWins++;}
+    if(mn<=-150){resGames++;if(out==='win'||out==='draw')resSaved++;}
   }
-  const n=results.length||1;
-  const avgAcc=Math.round(sumAcc/n), avgAcpl=Math.round(sumAcpl/n);
-  const bookPct=Math.round(totals.books/totalMoves*100);
-  const goodPct=Math.round((totals.bests+totals.excellents+totals.goods)/totalMoves*100);
+  const advCapScore=advGames?Math.round(advWins/advGames*100):0;
+  const resScore=resGames?Math.round(resSaved/resGames*100):0;
 
-  document.getElementById('skill-cards').innerHTML=`
-    <div class="skill-card"><div class="sk-val" style="color:${accColor(avgAcc)}">${avgAcc}%</div><div class="sk-lbl">Average Accuracy</div><div class="sk-bar"><div class="sk-fill" style="width:${avgAcc}%"></div></div></div>
-    <div class="skill-card"><div class="sk-val">${avgAcpl}</div><div class="sk-lbl">Avg Centipawn Loss</div><div class="sk-bar"><div class="sk-fill" style="width:${Math.max(0,100-avgAcpl/2)}%"></div></div></div>
-    <div class="skill-card"><div class="sk-val" style="color:var(--blue)">${bookPct}%</div><div class="sk-lbl">Moves in Theory</div><div class="sk-bar"><div class="sk-fill" style="width:${bookPct}%"></div></div></div>
-    <div class="skill-card"><div class="sk-val" style="color:var(--green)">${goodPct}%</div><div class="sk-lbl">Best/Excellent/Good</div><div class="sk-bar"><div class="sk-fill" style="width:${goodPct}%"></div></div></div>
-    <div class="skill-card"><div class="sk-val" style="color:var(--red)">${(totals.blunders/n).toFixed(1)}</div><div class="sk-lbl">Blunders per Game</div><div class="sk-bar"><div class="sk-fill" style="background:var(--red);width:${Math.min(100,totals.blunders/n/5*100)}%"></div></div></div>
-    <div class="skill-card"><div class="sk-val" style="color:var(--yellow)">${(totals.mistakes/n).toFixed(1)}</div><div class="sk-lbl">Mistakes per Game</div><div class="sk-bar"><div class="sk-fill" style="background:var(--yellow);width:${Math.min(100,totals.mistakes/n/10*100)}%"></div></div></div>`;
+  // ── Radar ──
+  const radarDims=[
+    {label:'Opening',  value:openingAcc},
+    {label:'Tactics',  value:tacticAcc},
+    {label:'Endgame',  value:endgameAcc},
+    {label:'Adv. Cap', value:advCapScore},
+    {label:'Resilience',value:resScore},
+  ];
+  drawRadarChart(radarDims);
+  document.getElementById('radar-interp').innerHTML=`
+    <div class="rpt-h">Your skill profile</div>
+    ${radarDims.map(d=>`<div class="rpt-item">
+      <span class="rpt-badge">${rptIcon(d.value)}</span>
+      <span>${d.label}: <span style="color:var(--text-muted)">${rptLabel(d.value)}</span></span>
+      <span class="rpt-score" style="color:${accColor(d.value)}">${Math.round(d.value)}%</span>
+    </div>`).join('')}`;
 
-  // Move quality distribution
+  // ── Win rate by colour ──
+  const wdl=colour=>{
+    const f=pairs.filter(p=>p.an.playerColor===colour);
+    const t=f.length||1,w=f.filter(p=>gameOutcome(p.game)==='win').length;
+    const d=f.filter(p=>gameOutcome(p.game)==='draw').length,l=f.length-w-d;
+    return{total:f.length,winPct:w/t*100,drawPct:d/t*100,lossPct:l/t*100,wins:w,draws:d,losses:l};
+  };
+  const wWDL=wdl('white'),bWDL=wdl('black');
+  const totG=wWDL.total+bWDL.total||1;
+  const allWDL={winPct:(wWDL.wins+bWDL.wins)/totG*100,drawPct:(wWDL.draws+bWDL.draws)/totG*100,lossPct:(wWDL.losses+bWDL.losses)/totG*100};
+  drawWinRateChart([
+    {label:'WHITE',winPct:wWDL.winPct,drawPct:wWDL.drawPct,lossPct:wWDL.lossPct},
+    {label:'BLACK',winPct:bWDL.winPct,drawPct:bWDL.drawPct,lossPct:bWDL.lossPct},
+    {label:'BOTH', winPct:allWDL.winPct,drawPct:allWDL.drawPct,lossPct:allWDL.lossPct},
+  ]);
+  const wW=Math.round(wWDL.winPct),bW=Math.round(bWDL.winPct),totW=Math.round(allWDL.winPct);
+  document.getElementById('winrate-interp').innerHTML=`
+    <div class="rpt-h">Interpretation</div>
+    <div class="rpt-sub">Overall</div>
+    <div class="rpt-p">Overall win rate: <strong style="color:${totW>=50?'var(--green)':'var(--red)'}">${totW}%</strong> across ${totG} games.</div>
+    <div class="rpt-sub">With White</div>
+    <div class="rpt-p">Win rate: <strong style="color:${wW>=50?'var(--green)':'var(--red)'}">${wW}%</strong> (${wWDL.total} games)</div>
+    <div class="rpt-sub">With Black</div>
+    <div class="rpt-p">Win rate: <strong style="color:${bW>=50?'var(--green)':'var(--red)'}">${bW}%</strong> (${bWDL.total} games)</div>
+    <div class="rpt-sub">How to improve</div>
+    <div class="rpt-p">${Math.abs(wW-bW)>=10?`There's a ${Math.abs(wW-bW)}% gap between your White and Black results — focus on improving your ${wW<bW?'White':'Black'} openings.`:'Your results are consistent across both colours.'}</div>`;
+
+  // ── Opening eval at move 10 ──
+  const evalAt=(colour)=>{
+    const f=colour==='both'?pairs:pairs.filter(p=>p.an.playerColor===colour);
+    const vals=f.map(({game,an})=>{
+      if(!an.evalHistory?.length) return null;
+      const idx=Math.min(20,an.evalHistory.length-1);
+      return isPlayerWhite(game)?an.evalHistory[idx]:-an.evalHistory[idx];
+    }).filter(v=>v!=null);
+    return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+  };
+  const oAll=evalAt('both'),oW=evalAt('white'),oB=evalAt('black');
+  drawOpeningEvalBars([{label:'Overall',valuecp:oAll},{label:'White',valuecp:oW},{label:'Black',valuecp:oB}]);
+
+  const openingEvals={};
+  for(const{game,an}of pairs){
+    if(!an.evalHistory?.length) continue;
+    const name=getOpeningName(game.pgn),idx=Math.min(20,an.evalHistory.length-1);
+    const ev=isPlayerWhite(game)?an.evalHistory[idx]:-an.evalHistory[idx];
+    if(!openingEvals[name]) openingEvals[name]=[];
+    openingEvals[name].push(ev);
+  }
+  const topOps=Object.entries(openingEvals).map(([name,evs])=>({name,avg:Math.round(evs.reduce((a,b)=>a+b,0)/evs.length),n:evs.length})).filter(o=>o.n>=2).sort((a,b)=>b.avg-a.avg);
+  document.getElementById('opening-top-table').innerHTML=topOps.length?`
+    <div class="card-title" style="margin-top:4px">Top Openings by Exit Eval</div>
+    <table><thead><tr><th>Opening</th><th>Games</th><th>Avg at Move 10</th></tr></thead><tbody>
+    ${[...topOps.slice(0,3),...topOps.slice(-Math.min(2,topOps.length-3)).filter(o=>topOps.indexOf(o)>2)].map(o=>{
+      const col=o.avg>=0?'var(--green)':'var(--red)',lbl=o.name.length>34?o.name.slice(0,32)+'…':o.name;
+      return`<tr><td title="${o.name}">${lbl}</td><td>${o.n}</td><td style="color:${col};font-weight:600">${(o.avg>=0?'+':'')+(o.avg/100).toFixed(2)}</td></tr>`;
+    }).join('')}</tbody></table>`:'';
+
+  const fmt=v=>v!=null?(v>=0?'+':'')+(v/100).toFixed(2):null;
+  document.getElementById('opening-interp').innerHTML=`
+    <div class="rpt-h">Interpretation</div>
+    <div class="rpt-sub">Average eval after move 10</div>
+    <div class="rpt-p">You exit the opening with <strong style="color:${oAll!=null&&oAll>=0?'var(--green)':'var(--red)'}">${fmt(oAll)??'—'}</strong> pawns on average.</div>
+    <div class="rpt-sub">With White</div><div class="rpt-p"><strong style="color:${oW!=null&&oW>=0?'var(--green)':'var(--red)'}">${fmt(oW)??'—'}</strong></div>
+    <div class="rpt-sub">With Black</div><div class="rpt-p"><strong style="color:${oB!=null&&oB>=0?'var(--green)':'var(--red)'}">${fmt(oB)??'—'}</strong></div>
+    <div class="rpt-sub">How to improve</div>
+    <div class="rpt-p">${oAll!=null&&oAll<-20?'You tend to come out of the opening worse — focus on theory and early piece development.':oAll!=null&&oAll>20?'Good opening results. Focus on converting those advantages in the middlegame.':'You keep things roughly equal out of the opening.'}</div>`;
+
+  // ── Advantage capitalization ──
+  const advTiers=[{cp:150,lbl:'1.5+ pawn advantage'},{cp:200,lbl:'2.0+ pawn advantage'},{cp:300,lbl:'3.0+ pawn advantage'}];
+  document.getElementById('advcap-chart').innerHTML=advTiers.map(({cp,lbl})=>{
+    let q=0,w=0;
+    for(const{game,an}of pairs){
+      if(!an.evalHistory?.length) continue;
+      const iw=isPlayerWhite(game),mx=Math.max(...an.evalHistory.map(e=>iw?e:-e));
+      if(mx>=cp){q++;if(gameOutcome(game)==='win')w++;}
+    }
+    const pct=q?Math.round(w/q*100):null;
+    const col=pct!=null?pct>=65?'var(--green)':pct>=45?'var(--yellow)':'var(--red)':'var(--text-muted)';
+    return rptBar(pct,col,`${lbl} (${q} games)`);
+  }).join('');
+  document.getElementById('advcap-interp').innerHTML=`
+    <div class="rpt-h">Advantage Capitalization</div>
+    <div class="rpt-p"><strong>Advantage capitalization</strong> measures how well you convert winning positions into actual wins.</div>
+    <div class="rpt-p">In ${advGames} games where you had a significant advantage, you won <strong style="color:${accColor(advCapScore)}">${advCapScore}%</strong>.</div>
+    <div class="rpt-sub">How to improve</div>
+    <div class="rpt-p">${advCapScore>=65?'Strong conversion. Keep simplifying into winning endgames when ahead.':advCapScore>=45?'Room to improve. When ahead, trade pieces to reduce counterplay and activate your king.':'Study endgame technique — converting advantages is a trainable skill. Review your drawn/lost games where you were winning.'}</div>`;
+
+  // ── Resourcefulness ──
+  const resTiers=[{cp:150,lbl:'Down 1.5+ pawns'},{cp:200,lbl:'Down 2.0+ pawns'},{cp:300,lbl:'Down 3.0+ pawns'}];
+  document.getElementById('resourcefulness-chart').innerHTML=resTiers.map(({cp,lbl})=>{
+    let q=0,s=0;
+    for(const{game,an}of pairs){
+      if(!an.evalHistory?.length) continue;
+      const iw=isPlayerWhite(game),mn=Math.min(...an.evalHistory.map(e=>iw?e:-e));
+      if(mn<=-cp){q++;const o=gameOutcome(game);if(o==='win'||o==='draw')s++;}
+    }
+    const pct=q?Math.round(s/q*100):null;
+    const col=pct!=null?pct>=35?'var(--green)':pct>=20?'var(--yellow)':'var(--red)':'var(--text-muted)';
+    return rptBar(pct,col,`${lbl} (${q} games)`);
+  }).join('');
+  document.getElementById('resourcefulness-interp').innerHTML=`
+    <div class="rpt-h">Resourcefulness</div>
+    <div class="rpt-p"><strong>Resourcefulness</strong> reflects your ability to fight back from difficult positions and save half or full points.</div>
+    <div class="rpt-p">In ${resGames} games where you were at a significant disadvantage, you saved <strong style="color:${accColor(resScore)}">${resScore}%</strong>.</div>
+    <div class="rpt-sub">How to improve</div>
+    <div class="rpt-p">${resScore>=35?'Strong fighting spirit — you create practical difficulties for your opponents.':resScore>=20?'About average. When losing, try to complicate the position and create counterplay.':'When down material, avoid passive play — create threats and complications to give yourself chances.'}</div>`;
+
+  // ── Move quality distribution ──
+  const totals={books:0,bests:0,excellents:0,goods:0,inaccuracies:0,mistakes:0,blunders:0};
+  const totalMoves=pairs.reduce((s,p)=>s+p.an.totalMoves,0)||1;
+  for(const{an}of pairs) for(const k of Object.keys(totals)) totals[k]+=an[k]||0;
   document.getElementById('cls-distribution').innerHTML=`
     ${clsBar({...totals,totalMoves})}
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
-      ${CLS_ORDER.map(c=>{
-        const cnt=totals[c+'s']??totals[c]??0;
-        return`<div style="font-size:12px"><span style="color:${CLS_COLORS[c]};font-weight:600">${cnt}</span> <span style="color:var(--text-muted)">${c}</span></div>`;
-      }).join('')}
+      ${CLS_ORDER.map(c=>{const cnt=totals[c+'s']??totals[c]??0;return`<div style="font-size:12px"><span style="color:${CLS_COLORS[c]};font-weight:600">${cnt}</span> <span style="color:var(--text-muted)">${c}</span></div>`;}).join('')}
     </div>`;
+  renderPhaseDistribution('phase-display-2');
 
-  // Accuracy by colour
-  document.getElementById('accuracy-by-color').innerHTML=`
-    <table>
-      <thead><tr><th>Colour</th><th>Games</th><th>Avg Accuracy</th><th>Blunders/game</th></tr></thead>
-      <tbody>
-        <tr><td><span class="badge badge-w">White</span></td><td>${wN}</td><td style="color:${accColor(wN?Math.round(wAcc/wN):0)}">${wN?Math.round(wAcc/wN)+'%':'—'}</td><td style="color:var(--red)">${wN?(results.filter(r=>r.an.playerColor==='white').reduce((s,r)=>s+r.an.blunders,0)/wN).toFixed(1):'—'}</td></tr>
-        <tr><td><span class="badge badge-b">Black</span></td><td>${bN}</td><td style="color:${accColor(bN?Math.round(bAcc/bN):0)}">${bN?Math.round(bAcc/bN)+'%':'—'}</td><td style="color:var(--red)">${bN?(results.filter(r=>r.an.playerColor==='black').reduce((s,r)=>s+r.an.blunders,0)/bN).toFixed(1):'—'}</td></tr>
-      </tbody>
-    </table>`;
-
-  // Worst games
-  const worst=[...results].sort((a,b)=>(b.an.blunders*3+b.an.mistakes)-(a.an.blunders*3+a.an.mistakes)).slice(0,10);
+  // ── Worst games ──
+  const worst=[...pairs].sort((a,b)=>(b.an.blunders*3+b.an.mistakes)-(a.an.blunders*3+a.an.mistakes)).slice(0,10);
   document.getElementById('worst-games-table').innerHTML=`
     <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Accuracy</th><th style="color:var(--red)">??</th><th style="color:var(--yellow)">?</th></tr></thead>
     <tbody>${worst.map(({game:g,an})=>{
-      const iw=isPlayerWhite(g),opp=iw?g.black?.username:g.white?.username,outcome=gameOutcome(g);
+      const iw=isPlayerWhite(g),opp=iw?g.black?.username:g.white?.username,out=gameOutcome(g);
       return`<tr style="cursor:pointer" onclick="openGameInBoard('${g.uuid}')">
         <td>${fmtDate(g.end_time)}</td><td>${opp||'?'}</td>
-        <td><span class="badge badge-${outcome}">${outcome}</span></td>
+        <td><span class="badge badge-${out}">${out}</span></td>
         <td style="color:${accColor(an.accuracy)}">${an.accuracy}%</td>
-        <td style="color:var(--red)">${an.blunders}</td>
-        <td style="color:var(--yellow)">${an.mistakes}</td>
+        <td style="color:var(--red)">${an.blunders}</td><td style="color:var(--yellow)">${an.mistakes}</td>
       </tr>`;
     }).join('')}</tbody>`;
-
-  renderPhaseDistribution('phase-display-2');
 }
 
 // ─── Openings ─────────────────────────────────────────────────────────────────
