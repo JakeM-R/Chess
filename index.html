@@ -669,7 +669,7 @@ function classifyMove(winPDrop, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v7_${game.uuid}`;
+  const key=`chess_analysis_v8_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
@@ -743,8 +743,8 @@ async function analyseGameV2(game, username){
     }
 
     moveDetails.push({
-      moveIndex:i-1,   // index into positions[] (position before the move)
-      posIndex:i,      // index into positions[] after move
+      moveIndex:i-1,
+      posIndex:i,
       san:positions[i].san,
       uci:positions[i].uci,
       classification,
@@ -752,7 +752,6 @@ async function analyseGameV2(game, username){
       evalBefore,
       evalAfter,
       bestMove:prevEv.bestMove,
-      fen:positions[i-1].fen,
     });
   }
 
@@ -779,7 +778,7 @@ async function analyseGameV2(game, username){
     moveDetails,
     evalHistory:evs.map(e=>e?.score??0),
   };
-  localStorage.setItem(key,JSON.stringify(result));
+  try{localStorage.setItem(key,JSON.stringify(result));}catch(e){console.warn('Analysis cache full, skipping save:',e.message);}
   return result;
 }
 
@@ -1273,7 +1272,8 @@ async function startAnalysis(){
     document.getElementById('analysis-status').textContent=`vs ${opp}`;
     document.getElementById('progress-fill').style.width=(done/queue.length*100)+'%';
     document.getElementById('progress-pct').textContent=Math.round(done/queue.length*100)+'%';
-    const r=await analyseGameV2(game,state.username);
+    let r=null;
+    try{r=await analyseGameV2(game,state.username);}catch(e){console.warn('Analysis failed for game',game.uuid,e);}
     if(r) state.analysisResults[game.uuid]=r;
     done++;
     if(done%3===0||done===queue.length){
