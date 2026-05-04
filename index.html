@@ -8,8 +8,11 @@
   // Enable SharedArrayBuffer (needed for Stockfish 18 threads) on GitHub Pages via COI service worker.
   // Registers once, reloads, then all subsequent loads are cross-origin isolated.
   if (!crossOriginIsolated && 'serviceWorker' in navigator) {
+    // Reload whenever a new SW takes control (handles both first install and updates)
+    navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
     navigator.serviceWorker.register('./coi-serviceworker.js').then(reg => {
-      if (!reg.active) location.reload();
+      // No controller yet = first install, SW won't fire controllerchange, reload manually
+      if (!navigator.serviceWorker.controller) location.reload();
     });
   }
 </script>
@@ -455,8 +458,8 @@ const state = {
 
 // ─── Stockfish ────────────────────────────────────────────────────────────────
 function initStockfishWasm() {
-  // Use a same-origin file worker so Safari allows ES module imports from CDN.
-  // Blob-URL module workers have null origin and Safari blocks cross-origin imports from them.
+  if (typeof SharedArrayBuffer === 'undefined')
+    return Promise.reject(new Error('SharedArrayBuffer unavailable (page not cross-origin isolated)'));
   return new Promise((resolve, reject) => {
     let sf;
     try { sf = new Worker('./sf-worker.js', {type:'module'}); }
