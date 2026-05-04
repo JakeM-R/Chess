@@ -478,6 +478,34 @@ function initStockfishWasm() {
   });
 }
 
+function initStockfishSingleThread() {
+  // SF16 NNUE single-threaded WASM — no SharedArrayBuffer needed, works everywhere.
+  // importScripts sets scriptDirectory to the CDN URL, so the WASM binary resolves correctly.
+  const CDN = 'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/';
+  const src = `
+var Module = { locateFile: p => '${CDN}' + p };
+importScripts('${CDN}stockfish-nnue-16-single.js');
+var engine = STOCKFISH();
+engine.addMessageListener(l => self.postMessage(l));
+self.onmessage = e => engine.postMessage(e.data);
+`;
+  const blob = new Blob([src], {type:'application/javascript'});
+  return new Promise((resolve, reject) => {
+    const sf = new Worker(URL.createObjectURL(blob));
+    let ready = false;
+    const timer = setTimeout(() => reject(new Error('SF16 timeout')), 30000);
+    sf.onmessage = e => {
+      if (typeof e.data !== 'string') return;
+      if (!ready) {
+        if (e.data === 'uciok') sf.postMessage('isready');
+        if (e.data === 'readyok') { clearTimeout(timer); ready = true; state.sfReady = true; resolve(sf); }
+      }
+    };
+    sf.onerror = err => { clearTimeout(timer); reject(new Error(err.message)); };
+    sf.postMessage('uci'); state.stockfish = sf;
+  });
+}
+
 function initStockfishLegacy() {
   return fetch('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js')
     .then(r => { if(!r.ok) throw new Error('SF10 fetch failed'); return r.text(); })
@@ -502,8 +530,15 @@ async function initStockfish() {
     console.log('Stockfish 18 WASM loaded');
     return sf;
   } catch(e) {
-    console.warn('SF18 WASM failed (' + e.message + ') — falling back to SF10 asm.js');
-    return initStockfishLegacy();
+    console.warn('SF18 failed (' + e.message + ') — trying SF16 NNUE single-thread');
+    try {
+      const sf = await initStockfishSingleThread();
+      console.log('Stockfish 16 NNUE single-thread loaded');
+      return sf;
+    } catch(e2) {
+      console.warn('SF16 failed (' + e2.message + ') — falling back to SF10');
+      return initStockfishLegacy();
+    }
   }
 }
 
@@ -764,7 +799,7 @@ function classifyMove(winPDrop, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v9_${game.uuid}`;
+  const key=`chess_analysis_v10_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
