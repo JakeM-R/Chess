@@ -1416,7 +1416,7 @@ function openGameInBoard(uuid){
       <div class="rc-moves">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Move quality</div>
         ${clsBar(an)}
-        <div class="rc-legend">${CLS_ORDER.map(c=>{const cnt=an[c+'s']??an[c]??0;return`<div class="rc-leg-item"><span class="rc-dot" style="background:${CLS_COLORS[c]}"></span><span style="color:var(--text-muted)">${c} </span><strong>${cnt}</strong></div>`;}).join('')}</div>
+        <div class="rc-legend">${CLS_ORDER.map(c=>{const key=c==='inaccuracy'?'inaccuracies':c+'s';const cnt=an[key]??0;return`<div class="rc-leg-item"><span class="rc-dot" style="background:${CLS_COLORS[c]}"></span><span style="color:var(--text-muted)">${c} </span><strong>${cnt}</strong></div>`;}).join('')}</div>
       </div>`;
   } else {
     rc.classList.remove('visible');
