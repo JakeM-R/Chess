@@ -981,7 +981,7 @@ function renderOverview(games){
 
   // Pie chart
   const canvas=document.getElementById('results-chart'), ctx=canvas.getContext('2d');
-  const W=canvas.parentElement.clientWidth-40||300; canvas.width=W; canvas.height=200;
+  const W=(canvas.parentElement.clientWidth||340)-40; canvas.width=W; canvas.height=200;
   const cx=W/2, cy=82, r=68, total=wins+draws+losses||1;
   const slices=[{val:wins,color:'#22c55e',label:`Win ${(wins/total*100).toFixed(0)}%`},{val:draws,color:'#f59e0b',label:`Draw ${(draws/total*100).toFixed(0)}%`},{val:losses,color:'#ef4444',label:`Loss ${(losses/total*100).toFixed(0)}%`}];
   let start=-Math.PI/2;
@@ -1119,7 +1119,7 @@ function drawWinRateChart(groups){
 
 function drawOpeningEvalBars(bars){
   const svg=document.getElementById('opening-eval-chart'); if(!svg) return;
-  const W=svg.parentElement.clientWidth-40||360,H=140;
+  const W=(svg.parentElement.clientWidth||400)-40,H=140;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   svg.style.cssText='width:100%;display:block';
   const labelW=64,rightPad=16,cx=labelW+(W-labelW-rightPad)/2;
