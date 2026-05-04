@@ -921,7 +921,7 @@ function drawLineChart(svgId, points, color='var(--accent)', yLabel='', opts={})
   // Last value dot + label
   const last=points[points.length-1];
   html+=`<circle cx="${xs(points.length-1).toFixed(1)}" cy="${ys(last.y).toFixed(1)}" r="4" fill="${color}"/>`;
-  html+=`<text x="${(xs(points.length-1)-6).toFixed(1)}" y="${(ys(last.y)-8).toFixed(1)}" fill="#e2e8f0" font-size="11">${Math.round(last.y)}${yLabel}</text>`;
+  html+=`<text x="${(xs(points.length-1)-8).toFixed(1)}" y="${(ys(last.y)-8).toFixed(1)}" fill="#e2e8f0" font-size="11" text-anchor="end">${Math.round(last.y)}${yLabel}</text>`;
   svg.innerHTML=html;
 }
 
