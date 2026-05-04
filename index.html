@@ -1057,11 +1057,6 @@ function drawWinRateChart(groups){
   }
   groups.forEach((g,gi)=>{
     const x=leftPad+gap+gi*(barW+gap);
-    [[g.lossPct,'#c0604a'],[g.drawPct,'#7b8094'],[g.winPct,'#4caf9e']].forEach(([pct,color])=>{
-      const h=chartH*pct/100; if(h<1) return;
-      ctx.fillStyle=color; ctx.fillRect(x,topPad+chartH*(1-pct/100-(g.winPct/100)),barW,h);
-    });
-    // Re-draw in order for correct stacking
     let y=topPad;
     [[g.lossPct,'#c0604a'],[g.drawPct,'#7b8094'],[g.winPct,'#4caf9e']].forEach(([pct,color])=>{
       const h=chartH*pct/100; if(h<1){return;}
