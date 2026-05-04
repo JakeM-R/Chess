@@ -447,22 +447,32 @@ const state = {
 // ─── Stockfish ────────────────────────────────────────────────────────────────
 async function initStockfish() {
   const BASE = 'https://cdn.jsdelivr.net/npm/@lichess-org/stockfish-web@0.3.0/';
-  // locateFile lets the WASM loader find sf_18.wasm via absolute CDN URL from inside a blob worker
-  const src = `self.Module={locateFile:p=>'${BASE}'+p};importScripts('${BASE}sf_18.js');`;
+  // sf_18.js is an ES module with a callback API (listen/uci), not raw postMessage UCI.
+  // We bridge it: module worker awaits the engine, then translates postMessage <-> engine.uci/listen.
+  const src = `
+import Sf from '${BASE}sf_18_smallnet.js';
+let engine = null;
+(async () => {
+  try {
+    engine = await Sf({ locateFile: p => '${BASE}' + p, listen: l => self.postMessage(l) });
+    self.postMessage('sf_ready');
+  } catch(e) { self.postMessage('sf_error:' + e.message); }
+})();
+self.onmessage = e => { if (engine) engine.uci(e.data); };
+`;
   const blob = new Blob([src], {type:'application/javascript'});
   return new Promise((resolve, reject) => {
-    const sf = new Worker(URL.createObjectURL(blob));
-    let ready = false;
-    const timeout = setTimeout(() => reject(new Error('Stockfish init timeout')), 30000);
+    const sf = new Worker(URL.createObjectURL(blob), {type:'module'});
+    let phase = 0; // 0=await sf_ready, 1=await uciok, 2=await readyok
+    const timer = setTimeout(() => reject(new Error('Stockfish init timeout')), 30000);
     sf.onmessage = e => {
       if (typeof e.data !== 'string') return;
-      if (!ready) {
-        if (e.data === 'uciok') sf.postMessage('isready');
-        if (e.data === 'readyok') { clearTimeout(timeout); ready = true; state.sfReady = true; resolve(sf); }
-      }
+      if (e.data.startsWith('sf_error:')) { clearTimeout(timer); reject(new Error(e.data)); return; }
+      if (phase === 0 && e.data === 'sf_ready')   { phase = 1; sf.postMessage('uci'); return; }
+      if (phase === 1 && e.data === 'uciok')       { phase = 2; sf.postMessage('isready'); return; }
+      if (phase === 2 && e.data === 'readyok')     { clearTimeout(timer); state.sfReady = true; resolve(sf); }
     };
-    sf.onerror = err => { clearTimeout(timeout); reject(new Error(err.message)); };
-    sf.postMessage('uci');
+    sf.onerror = err => { clearTimeout(timer); reject(new Error(err.message)); };
     state.stockfish = sf;
   });
 }
