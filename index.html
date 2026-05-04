@@ -479,19 +479,10 @@ function initStockfishWasm() {
 }
 
 function initStockfishSingleThread() {
-  // SF16 NNUE single-threaded WASM — no SharedArrayBuffer needed, works everywhere.
-  // importScripts sets scriptDirectory to the CDN URL, so the WASM binary resolves correctly.
-  const CDN = 'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/';
-  const src = `
-var Module = { locateFile: p => '${CDN}' + p };
-importScripts('${CDN}stockfish-nnue-16-single.js');
-var engine = STOCKFISH();
-engine.addMessageListener(l => self.postMessage(l));
-self.onmessage = e => engine.postMessage(e.data);
-`;
-  const blob = new Blob([src], {type:'application/javascript'});
+  // sf-worker.js is a real HTTPS file, so self.location.href is valid in Safari
+  // and Emscripten can compute scriptDirectory for the WASM fetch correctly.
   return new Promise((resolve, reject) => {
-    const sf = new Worker(URL.createObjectURL(blob));
+    const sf = new Worker('./sf-worker.js');
     let ready = false;
     const timer = setTimeout(() => reject(new Error('SF16 timeout')), 30000);
     sf.onmessage = e => {
