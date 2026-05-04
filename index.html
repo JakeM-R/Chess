@@ -1099,7 +1099,7 @@ function drawWinRateChart(groups){
   groups.forEach((g,gi)=>{
     const x=leftPad+gap+gi*(barW+gap);
     let y=topPad;
-    [[g.lossPct,'#c0604a'],[g.drawPct,'#7b8094'],[g.winPct,'#4caf9e']].forEach(([pct,color])=>{
+    [[g.winPct,'#4caf9e'],[g.drawPct,'#7b8094'],[g.lossPct,'#c0604a']].forEach(([pct,color])=>{
       const h=chartH*pct/100; if(h<1){return;}
       ctx.fillStyle=color; ctx.fillRect(x,y,barW,h);
       if(pct>=8){ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText(Math.round(pct)+'%',x+barW/2,y+h/2+4);}
@@ -1300,7 +1300,7 @@ function renderAnalysisTab(games){
   document.getElementById('cls-distribution').innerHTML=`
     ${clsBar({...totals,totalMoves})}
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
-      ${CLS_ORDER.map(c=>{const cnt=totals[c+'s']??totals[c]??0;return`<div style="font-size:12px"><span style="color:${CLS_COLORS[c]};font-weight:600">${cnt}</span> <span style="color:var(--text-muted)">${c}</span></div>`;}).join('')}
+      ${CLS_ORDER.map(c=>{const key=c==='inaccuracy'?'inaccuracies':c+'s';const cnt=totals[key]??0;return`<div style="font-size:12px"><span style="color:${CLS_COLORS[c]};font-weight:600">${cnt}</span> <span style="color:var(--text-muted)">${c}</span></div>`;}).join('')}
     </div>`;
   renderPhaseDistribution('phase-display-2');
 
@@ -1475,6 +1475,7 @@ function openGameInBoard(uuid){
     mlHtml+=`<span class="move-token mv-${cls||'good'}" data-idx="${i}" onclick="gotoMove(${i})">${m.san}${suffix?`<span style="font-size:10px">${suffix}</span>`:''}</span>`;
     if(i%2===0) mlHtml+='</div>';
   }
+  if((state.currentMoves.length-1)%2===1) mlHtml+='</div>';
   document.getElementById('move-list').innerHTML=mlHtml;
   renderBoard(state.currentMoves[0].fen);
   updateEvalBar(an?.evalHistory?.[0]);
@@ -1499,7 +1500,7 @@ function updateBoardInfo(md){
   if(!state.currentGame) return;
   const idx=state.currentMoveIndex, pos=state.currentMoves?.[idx];
   if(!pos) return;
-  let info=`Move ${Math.ceil(idx/2)}`;
+  let info=idx===0?'Start':`Move ${Math.ceil(idx/2)}`;
   if(md&&md.classification!==CLS.book){
     const color=CLS_COLORS[md.classification];
     info+=` — <span style="color:${color};font-weight:600">${md.classification}</span>`;
@@ -1535,6 +1536,7 @@ async function loadGames(username, tc, dateFrom, dateTo, silent=false){
       if(!silent) alert('No games found for those filters.');
       return;
     }
+    state.analysing=false;
     localStorage.setItem('chess_last_session', JSON.stringify({username, tc, dateFrom, dateTo}));
     renderOverview(state.games);
     renderOpenings(state.games);
