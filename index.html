@@ -445,10 +445,8 @@ const state = {
 };
 
 // ─── Stockfish ────────────────────────────────────────────────────────────────
-async function initStockfish() {
+function initStockfishWasm() {
   const BASE = 'https://cdn.jsdelivr.net/npm/@lichess-org/stockfish-web@0.3.0/';
-  // sf_18.js is an ES module with a callback API (listen/uci), not raw postMessage UCI.
-  // We bridge it: module worker awaits the engine, then translates postMessage <-> engine.uci/listen.
   const src = `
 import Sf from '${BASE}sf_18_smallnet.js';
 let engine = null;
@@ -462,19 +460,50 @@ self.onmessage = e => { if (engine) engine.uci(e.data); };
 `;
   const blob = new Blob([src], {type:'application/javascript'});
   return new Promise((resolve, reject) => {
-    const sf = new Worker(URL.createObjectURL(blob), {type:'module'});
-    let phase = 0; // 0=await sf_ready, 1=await uciok, 2=await readyok
-    const timer = setTimeout(() => reject(new Error('Stockfish init timeout')), 30000);
+    let sf;
+    try { sf = new Worker(URL.createObjectURL(blob), {type:'module'}); }
+    catch(e) { return reject(new Error('module-worker-unsupported: ' + e.message)); }
+    let phase = 0;
+    const timer = setTimeout(() => { sf.terminate(); reject(new Error('SF18 init timeout')); }, 15000);
     sf.onmessage = e => {
       if (typeof e.data !== 'string') return;
-      if (e.data.startsWith('sf_error:')) { clearTimeout(timer); reject(new Error(e.data)); return; }
-      if (phase === 0 && e.data === 'sf_ready')   { phase = 1; sf.postMessage('uci'); return; }
-      if (phase === 1 && e.data === 'uciok')       { phase = 2; sf.postMessage('isready'); return; }
-      if (phase === 2 && e.data === 'readyok')     { clearTimeout(timer); state.sfReady = true; resolve(sf); }
+      if (e.data.startsWith('sf_error:')) { clearTimeout(timer); sf.terminate(); reject(new Error(e.data)); return; }
+      if (phase === 0 && e.data === 'sf_ready')  { phase = 1; sf.postMessage('uci'); return; }
+      if (phase === 1 && e.data === 'uciok')      { phase = 2; sf.postMessage('isready'); return; }
+      if (phase === 2 && e.data === 'readyok')    { clearTimeout(timer); state.sfReady = true; resolve(sf); }
     };
-    sf.onerror = err => { clearTimeout(timer); reject(new Error(err.message)); };
+    sf.onerror = err => { clearTimeout(timer); sf.terminate(); reject(new Error('SF18 worker error: ' + (err.message||err))); };
     state.stockfish = sf;
   });
+}
+
+function initStockfishLegacy() {
+  return fetch('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js')
+    .then(r => { if(!r.ok) throw new Error('SF10 fetch failed'); return r.text(); })
+    .then(text => new Promise((resolve, reject) => {
+      const sf = new Worker(URL.createObjectURL(new Blob([text],{type:'application/javascript'})));
+      let ready = false;
+      const timer = setTimeout(() => reject(new Error('SF10 timeout')), 30000);
+      sf.onmessage = e => {
+        if (!ready) {
+          if (e.data === 'uciok') sf.postMessage('isready');
+          if (e.data === 'readyok') { clearTimeout(timer); ready = true; state.sfReady = true; resolve(sf); }
+        }
+      };
+      sf.onerror = err => { clearTimeout(timer); reject(new Error(err.message)); };
+      sf.postMessage('uci'); state.stockfish = sf;
+    }));
+}
+
+async function initStockfish() {
+  try {
+    const sf = await initStockfishWasm();
+    console.log('Stockfish 18 WASM loaded');
+    return sf;
+  } catch(e) {
+    console.warn('SF18 WASM failed (' + e.message + ') — falling back to SF10 asm.js');
+    return initStockfishLegacy();
+  }
 }
 
 function evaluatePosition(fen, depth=12) {
@@ -1532,7 +1561,8 @@ async function startAnalysis(){
     document.getElementById('analysis-bar').classList.add('visible');
     try{await initStockfish();}
     catch(e){
-      document.getElementById('progress-text').textContent='Stockfish failed to load — analysis unavailable';
+      console.error('Stockfish init failed:', e);
+      document.getElementById('progress-text').textContent='Stockfish failed to load: '+e.message;
       state.analysing=false; return;
     }
   }
