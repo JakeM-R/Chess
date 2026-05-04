@@ -446,20 +446,24 @@ const state = {
 
 // ─── Stockfish ────────────────────────────────────────────────────────────────
 async function initStockfish() {
-  const res = await fetch('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');
-  if (!res.ok) throw new Error('Stockfish fetch failed');
-  const blob = new Blob([await res.text()],{type:'application/javascript'});
-  return new Promise(resolve=>{
+  const BASE = 'https://cdn.jsdelivr.net/npm/@lichess-org/stockfish-web@0.3.0/';
+  // locateFile lets the WASM loader find sf_18.wasm via absolute CDN URL from inside a blob worker
+  const src = `self.Module={locateFile:p=>'${BASE}'+p};importScripts('${BASE}sf_18.js');`;
+  const blob = new Blob([src], {type:'application/javascript'});
+  return new Promise((resolve, reject) => {
     const sf = new Worker(URL.createObjectURL(blob));
-    let ready=false;
-    sf.onmessage=e=>{
-      if(!ready){
-        if(e.data==='uciok') sf.postMessage('isready');
-        if(e.data==='readyok'){ready=true;state.sfReady=true;resolve(sf);}
+    let ready = false;
+    const timeout = setTimeout(() => reject(new Error('Stockfish init timeout')), 30000);
+    sf.onmessage = e => {
+      if (typeof e.data !== 'string') return;
+      if (!ready) {
+        if (e.data === 'uciok') sf.postMessage('isready');
+        if (e.data === 'readyok') { clearTimeout(timeout); ready = true; state.sfReady = true; resolve(sf); }
       }
     };
-    sf.onerror=err=>{throw new Error(err.message);};
-    sf.postMessage('uci'); state.stockfish=sf;
+    sf.onerror = err => { clearTimeout(timeout); reject(new Error(err.message)); };
+    sf.postMessage('uci');
+    state.stockfish = sf;
   });
 }
 
@@ -720,7 +724,7 @@ function classifyMove(winPDrop, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v8_${game.uuid}`;
+  const key=`chess_analysis_v9_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
