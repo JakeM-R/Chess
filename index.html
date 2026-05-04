@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chess Analytics</title>
+<script>
+  // Enable SharedArrayBuffer (needed for Stockfish 18 threads) on GitHub Pages via COI service worker.
+  // Registers once, reloads, then all subsequent loads are cross-origin isolated.
+  if (!crossOriginIsolated && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./coi-serviceworker.js').then(reg => {
+      if (!reg.active) location.reload();
+    });
+  }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
   :root {
