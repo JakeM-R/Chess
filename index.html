@@ -479,14 +479,39 @@ function initStockfishWasm() {
 }
 
 function initStockfishSingleThread() {
-  // sf-worker.js is a real HTTPS file, so self.location.href is valid in Safari
-  // and Emscripten can compute scriptDirectory for the WASM fetch correctly.
+  // Inline blob worker: importScripts with absolute URLs works in Safari blob workers
+  // (only ES module `import` from blob workers is blocked). Sync XHR pre-fetches the
+  // WASM binary so Module.wasmBinary is set before importScripts, bypassing the broken
+  // scriptDirectory resolution that would otherwise 404 against GitHub Pages.
+  const CDN = 'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/';
+  const src = `
+const CDN='${CDN}';
+const xhr=new XMLHttpRequest();
+xhr.open('GET',CDN+'stockfish-nnue-16-single.wasm',false);
+xhr.responseType='arraybuffer';
+xhr.send();
+if(xhr.status!==200)throw new Error('WASM XHR failed: '+xhr.status);
+const wasmBinary=new Uint8Array(xhr.response);
+self.Module={wasmBinary};
+importScripts(CDN+'stockfish-nnue-16-single.js');
+const factory=typeof Stockfish!=='undefined'?Stockfish:typeof STOCKFISH!=='undefined'?STOCKFISH:null;
+if(!factory)throw new Error('No Stockfish factory found');
+let engine=null,queue=[];
+self.onmessage=e=>engine?engine.postMessage(e.data):queue.push(e.data);
+Promise.resolve(factory({wasmBinary})).then(eng=>{
+  engine=eng;
+  engine.addMessageListener(l=>self.postMessage(l));
+  queue.forEach(m=>engine.postMessage(m));queue.length=0;
+}).catch(err=>self.postMessage('sf_error:'+err.message));
+`;
+  const blob = new Blob([src], {type:'application/javascript'});
   return new Promise((resolve, reject) => {
-    const sf = new Worker('./sf-worker.js?v=3');
+    const sf = new Worker(URL.createObjectURL(blob));
     let ready = false;
     const timer = setTimeout(() => reject(new Error('SF16 timeout')), 30000);
     sf.onmessage = e => {
       if (typeof e.data !== 'string') return;
+      if (e.data.startsWith('sf_error:')) { clearTimeout(timer); reject(new Error(e.data)); return; }
       if (!ready) {
         if (e.data === 'uciok') sf.postMessage('isready');
         if (e.data === 'readyok') { clearTimeout(timer); ready = true; state.sfReady = true; resolve(sf); }
