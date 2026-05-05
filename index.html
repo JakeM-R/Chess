@@ -482,7 +482,7 @@ function initStockfishSingleThread() {
   // sf-worker.js is a real HTTPS file, so self.location.href is valid in Safari
   // and Emscripten can compute scriptDirectory for the WASM fetch correctly.
   return new Promise((resolve, reject) => {
-    const sf = new Worker('./sf-worker.js');
+    const sf = new Worker('./sf-worker.js?v=3');
     let ready = false;
     const timer = setTimeout(() => reject(new Error('SF16 timeout')), 30000);
     sf.onmessage = e => {
