@@ -404,6 +404,13 @@
       <div class="setting-label">Board Style</div>
       <div id="board-style-options"></div>
     </div>
+    <div class="setting-group">
+      <div class="setting-label">Analysis Cache</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="clearAnalysisCache()">Clear analysis cache</button>
+        <span id="cache-status" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -443,8 +450,19 @@ function buildSettingsUI() {
 }
 function pickAccent(i){settings.accentIdx=i;saveSettings();buildSettingsUI();}
 function pickBoard(i){settings.boardIdx=i;saveSettings();buildSettingsUI();}
-function openSettings(){buildSettingsUI();document.getElementById('settings-modal').classList.add('open');}
+function openSettings(){
+  buildSettingsUI();
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('chess_analysis_'));
+  document.getElementById('cache-status').textContent=keys.length?`${keys.length} game${keys.length!==1?'s':''} cached`:'No cached games';
+  document.getElementById('settings-modal').classList.add('open');
+}
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function clearAnalysisCache(){
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('chess_analysis_'));
+  keys.forEach(k=>localStorage.removeItem(k));
+  state.analysisResults={};
+  document.getElementById('cache-status').textContent='Cache cleared';
+}
 document.getElementById('settings-btn').onclick=openSettings;
 document.getElementById('settings-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSettings();});
 
@@ -806,7 +824,7 @@ function classifyMove(winPDrop, isPlayedBest){
 }
 
 async function analyseGameV2(game, username){
-  const key=`chess_analysis_v10_${game.uuid}`;
+  const key=`chess_analysis_v11_${game.uuid}`;
   const cached=localStorage.getItem(key);
   if(cached){try{
     const r=JSON.parse(cached);
