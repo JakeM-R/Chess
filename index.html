@@ -478,22 +478,37 @@ function initStockfishWasm() {
   });
 }
 
-function initStockfishSingleThread() {
-  // sf-worker.js via HTTPS so self.location.href is a valid URL — Safari's new URL('.',blob)
-  // crashes, but new URL('.','https://...') works. Date.now() guarantees a cache miss.
+async function initStockfishSingleThread() {
+  // The stockfish@16.0.0 script is designed to be loaded directly as a Worker, not via
+  // importScripts. When it detects a worker context (typeof onmessage !== 'undefined') it
+  // self-initialises: calls the Emscripten factory, routes UCI via onmessage/postMessage.
+  // It never exports a global Stockfish factory — importScripts + factory lookup doesn't work.
+  //
+  // The script reads self.location.hash to find the WASM URL:
+  //   r = decodeURIComponent(hash.substr(1).split(",")[0] || "stockfish-nnue-16-single.wasm")
+  //   locateFile(".wasm") => r
+  // We fetch the script as text, blob it, append the CDN WASM URL as the hash fragment,
+  // and load that blob as the Worker. The script self-initialises with the CDN WASM URL.
+  const CDN = 'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/';
+  const res = await fetch(CDN + 'stockfish-nnue-16-single.js');
+  if (!res.ok) throw new Error('SF16 JS fetch failed ' + res.status);
+  const text = await res.text();
+  const blob = new Blob([text], { type: 'application/javascript' });
+  const blobUrl = URL.createObjectURL(blob);
+  const workerUrl = blobUrl + '#' + encodeURIComponent(CDN + 'stockfish-nnue-16-single.wasm');
   return new Promise((resolve, reject) => {
-    const sf = new Worker('./sf-worker.js?' + Date.now());
+    const sf = new Worker(workerUrl);
+    URL.revokeObjectURL(blobUrl);
     let ready = false;
-    const timer = setTimeout(() => { sf.terminate(); reject(new Error('SF16 timeout')); }, 30000);
+    const timer = setTimeout(() => { sf.terminate(); reject(new Error('SF16 timeout')); }, 45000);
     sf.onmessage = e => {
       if (typeof e.data !== 'string') return;
-      if (e.data.startsWith('sf_error:')) { clearTimeout(timer); sf.terminate(); reject(new Error(e.data)); return; }
       if (!ready) {
         if (e.data === 'uciok') sf.postMessage('isready');
         if (e.data === 'readyok') { clearTimeout(timer); ready = true; state.sfReady = true; resolve(sf); }
       }
     };
-    sf.onerror = err => { clearTimeout(timer); sf.terminate(); reject(new Error(err.message)); };
+    sf.onerror = err => { clearTimeout(timer); sf.terminate(); reject(new Error(err.message || 'SF16 worker error')); };
     sf.postMessage('uci'); state.stockfish = sf;
   });
 }
