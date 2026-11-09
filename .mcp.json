@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "chess": {
+      "command": "uvx",
+      "args": [
+        "--with", "mcp[cli]<2",
+        "--from", "git+https://github.com/pab1it0/chess-mcp",
+        "chess-mcp"
+      ]
+    }
+  }
+}
